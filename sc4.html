@@ -162,7 +162,7 @@
         .row-action-group-left {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
         .row-action-group-right {
             display: flex;
@@ -320,18 +320,18 @@
             font-weight: bold;
             margin-top: 20px;
             margin-bottom: 0;
-            padding: 5px 20px;
+            padding: 4px 20px;
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
         .date-info {
             display: none;
             font-size: 0.8em;
             font-weight: normal;
             color: var(--date-text-color);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         .main-container.show-dates .date-info {
             display: block;
@@ -342,12 +342,12 @@
         .checkbox-container {
             display: flex;
             align-items: center;
-            margin-left: 15px;
+            margin-left: 16px;
             color: white;
             font-size: 14px;
         }
         .checkbox-container input {
-            margin-right: 5px;
+            margin-right: 4px;
         }
         .row-number {
             font-size: 1.5em;
@@ -438,10 +438,10 @@
             color: white;
             border: none;
             cursor: pointer;
-            padding: 5px 10px;
+            padding: 4px 10px;
             font-size: 18px;
             border-radius: 4px;
-            margin: 0 5px;
+            margin: 0 4px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -460,7 +460,7 @@
             background-color: var(--toolbar-color);
             color: white;
             border: 1px solid #444444;
-            padding: 0 5px;
+            padding: 0 4px;
             margin-left: 10px;
             text-align: center;
         }
@@ -475,7 +475,7 @@
             border-radius: 8px;
         }
         .editor-app { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        #editor-fileInfo { font-size: 15px; color: #ddd; }
+        #editor-fileInfo { font-size: 14px; color: #ddd; }
         #editor-playerRow { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; }
         .editor-navBtn { background: #222; border: 2px solid #333; color: #fff; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 18px; }
         #editor-playerWrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
@@ -498,7 +498,7 @@
         .editor-control-group { display: flex; gap: 8px; justify-content: center; flex: 1; }
         .editor-frame-btn { background: #333; border: 1px solid #444; font-size: 16px; padding: 4px 10px; color: white; cursor: pointer; }
         #editor-cutsListContainer { width: 98%; margin-top: 10px; background: #2a2a2a; border-radius: 6px; padding: 8px; max-height: 120px; overflow-y: auto; }
-        .editor-cut-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #333; color: #eee; }
+        .editor-cut-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #333; color: #eee; }
         .editor-delete-cut-btn { cursor: pointer; color: #ff5252; font-weight: bold; }
         .editor-greenBtn { background: #43a047; border: 2px solid #2e7d32; color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     </style>
@@ -620,7 +620,7 @@
 
     <div id="video-modal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 90%; max-height: 90%; padding: 0; background: black; position: relative; display: flex; align-items: center; justify-content: center;">
-            <span class="close" id="close-video-modal" style="position: absolute; right: 10px; top: 5px; color: white; z-index: 3000;">&times;</span>
+            <span class="close" id="close-video-modal" style="position: absolute; right: 10px; top: 4px; color: white; z-index: 3000;">&times;</span>
             <video id="player" controls style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;"></video>
         </div>
     </div>
@@ -1952,7 +1952,7 @@
                 '        elseif (\$seg.rotation -eq 270) { \$transpose = "transpose=2," }',
                 '        ',
                 '        # Scale and pad to match max dimensions to allow concatenation',
-                '        \$vf = "\$transpose" + "scale=(iw*sar)*min(\$maxW/(iw*sar)\\\,\$maxH/ih):ih*min(\$maxW/(iw*sar)\\\,\$maxH/ih),pad=\$maxW:\$maxH:(\$maxW-iw*min(\$maxW/iw\\\,\$maxH/ih))/2:(\$maxH-ih*min(\$maxW/iw\\\,\$maxH/ih))/2"',
+                '        \$vf = "\$transpose" + "scale=(iw*sar)*min(\${maxW}/(iw*sar)\\\,\${maxH}/ih):ih*min(\${maxW}/(iw*sar)\\\,\${maxH}/ih),pad=\${maxW}:\${maxH}:(\${maxW}-iw*min(\${maxW}/iw\\\,\${maxH}/ih))/2:(\${maxH}-ih*min(\${maxW}/iw\\\,\${maxH}/ih))/2"',
                 '        ',
                 '        \$dur = \$seg.end - \$seg.start',
                 '        ffmpeg -y -i "\$sourcePath" -ss \$seg.start -t \$dur -vf "\$vf" -c:v libx264 -crf 17 -preset fast -c:a copy -avoid_negative_ts make_zero "\$outSeg" 2>\$null',

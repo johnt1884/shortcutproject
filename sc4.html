@@ -464,6 +464,43 @@
             margin-left: 10px;
             text-align: center;
         }
+
+        /* Editor Overlay Styles */
+        #editor-modal .modal-content {
+            background-color: #121212;
+            color: #eee;
+            width: 95%;
+            max-width: 1200px;
+            padding: 18px;
+            border-radius: 8px;
+        }
+        .editor-app { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        #editor-fileInfo { font-size: 15px; color: #ddd; }
+        #editor-playerRow { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; }
+        .editor-navBtn { background: #222; border: 2px solid #333; color: #fff; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 18px; }
+        #editor-playerWrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        #editor-videoContainer { width: 100%; display: flex; align-items: center; justify-content: center; min-height: 260px; position: relative; }
+        #editor-videoOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); pointer-events: none; display: none; z-index: 10; }
+        #editor-mainVideo { max-width: 90%; max-height: 60vh; background: black; border-radius: 6px; object-fit: contain; }
+        #editor-timelineWrap { width: 98%; position: relative; user-select: none; margin-top: 10px; }
+        #editor-timeline { height: 18px; background: #333; border-radius: 9px; position: relative; cursor: pointer; margin-bottom: 36px; }
+        #editor-scrubber { position: absolute; top: 50%; left: 0; width: 22px; height: 22px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+        #editor-progress { position: absolute; left: 0; top: 0; height: 100%; background: #00acc1; border-radius: 9px; width: 0%; }
+        .editor-marker { position: absolute; top: 0; width: 6px; height: 18px; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 0 4px rgba(0,0,0,.6); }
+        .editor-marker[data-rot="270"] { background: #00e5ff; }
+        .editor-marker[data-rot="180"] { background: #ffca28; }
+        .editor-marker[data-rot="90"] { background: #ff4081; }
+        .editor-cut-region { position: absolute; top: 0; height: 100%; background: rgba(255, 82, 82, 0.5); pointer-events: none; }
+        .editor-pending-marker { position: absolute; top: -4px; width: 4px; height: 26px; transform: translateX(-50%); border-radius: 2px; background: #ff5252; }
+        .editor-delete-x { position: absolute; top: 20px; transform: translateX(-50%); font-size: 12px; cursor: pointer; color: #ccc; }
+        .editor-delete-x:hover { color: #f44336; }
+        #editor-controls { display: flex; gap: 8px; align-items: center; width: 98%; margin-top: 8px; justify-content: space-between; }
+        .editor-control-group { display: flex; gap: 8px; justify-content: center; flex: 1; }
+        .editor-frame-btn { background: #333; border: 1px solid #444; font-size: 16px; padding: 4px 10px; color: white; cursor: pointer; }
+        #editor-cutsListContainer { width: 98%; margin-top: 10px; background: #2a2a2a; border-radius: 6px; padding: 8px; max-height: 120px; overflow-y: auto; }
+        .editor-cut-item { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 1px solid #333; color: #eee; }
+        .editor-delete-cut-btn { cursor: pointer; color: #ff5252; font-weight: bold; }
+        .editor-greenBtn { background: #43a047; border: 2px solid #2e7d32; color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -588,6 +625,51 @@
         </div>
     </div>
 
+    <div id="editor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-editor-modal">&times;</span>
+            <div class="editor-app">
+                <div id="editor-fileInfo">No file selected</div>
+                <div id="editor-playerWrap">
+                    <div id="editor-videoContainer">
+                        <div id="editor-videoOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); pointer-events: none; display: none; z-index: 10;"></div>
+                        <video id="editor-mainVideo" controls muted preload="metadata"></video>
+                    </div>
+                    <div id="editor-timelineWrap">
+                        <div id="editor-timeline">
+                            <div id="editor-progress"></div>
+                            <div id="editor-scrubber"></div>
+                        </div>
+                    </div>
+                    <div id="editor-frameControls" class="editor-control-group" style="margin-bottom: 8px;">
+                        <button id="editor-frameBackBtn" class="editor-frame-btn">←</button>
+                        <button id="editor-frameForwardBtn" class="editor-frame-btn">→</button>
+                    </div>
+                    <div id="editor-controls">
+                        <div class="editor-control-group" style="justify-content:flex-start">
+                            <button id="editor-playPause" class="bar-button">▶️ Play</button>
+                        </div>
+                        <div class="editor-control-group">
+                            <button id="editor-markStartBtn" class="bar-button" style="border-color:#43a047">Mark Start</button>
+                            <button id="editor-rotLeft" class="bar-button" style="border-color:#00e5ff">90° Left</button>
+                            <button id="editor-rot180" class="bar-button" style="border-color:#ffca28">180°</button>
+                            <button id="editor-rotRight" class="bar-button" style="border-color:#ff4081">90° Right</button>
+                            <button id="editor-markEndBtn" class="bar-button" style="border-color:#43a047">Mark End</button>
+                            <button id="editor-cutSegmentBtn" class="bar-button" style="background:#d32f2f;color:white" disabled>Cut Segment</button>
+                        </div>
+                        <div class="editor-control-group" style="justify-content:flex-end">
+                            <span id="editor-timeDisplay" style="font-size: 12px; color: #888;">00:00.000 / 00:00.000</span>
+                        </div>
+                    </div>
+                    <div id="editor-cutsListContainer"></div>
+                    <div style="width:98%; display:flex; justify-content: flex-end; margin-top: 10px;">
+                        <button id="editor-commitBtn" class="editor-greenBtn">Commit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="script-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -633,6 +715,27 @@
         const videoModal = document.getElementById('video-modal');
         const player = document.getElementById('player');
         const closeVideoModal = document.getElementById('close-video-modal');
+        const editorModal = document.getElementById('editor-modal');
+        const closeEditorModal = document.getElementById('close-editor-modal');
+        const editorMainVideo = document.getElementById('editor-mainVideo');
+        const editorTimeline = document.getElementById('editor-timeline');
+        const editorProgress = document.getElementById('editor-progress');
+        const editorScrubber = document.getElementById('editor-scrubber');
+        const editorPlayPauseBtn = document.getElementById('editor-playPause');
+        const editorTimeDisplay = document.getElementById('editor-timeDisplay');
+        const editorMarkStartBtn = document.getElementById('editor-markStartBtn');
+        const editorMarkEndBtn = document.getElementById('editor-markEndBtn');
+        const editorCutSegmentBtn = document.getElementById('editor-cutSegmentBtn');
+        const editorCutsListContainer = document.getElementById('editor-cutsListContainer');
+        const editorCommitBtn = document.getElementById('editor-commitBtn');
+        const editorFrameBackBtn = document.getElementById('editor-frameBackBtn');
+        const editorFrameForwardBtn = document.getElementById('editor-frameForwardBtn');
+        const editorRotLeftBtn = document.getElementById('editor-rotLeft');
+        const editorRot180Btn = document.getElementById('editor-rot180');
+        const editorRotRightBtn = document.getElementById('editor-rotRight');
+        const editorVideoOverlay = document.getElementById('editor-videoOverlay');
+        const editorFileInfo = document.getElementById('editor-fileInfo');
+
         const prevCanvasBtn = document.getElementById('prev-canvas-btn');
         const nextCanvasBtn = document.getElementById('next-canvas-btn');
         const loadMenuBtn = document.getElementById('load-menu-btn');
@@ -660,6 +763,18 @@
         let originalPlaylistShortcuts = [];
         let playlistCreationTime = null;
         let currentVideoUrl = null;
+        let editorCurrentVideo = null;
+        let editorCurrentCuts = [];
+        let editorPendingCutStart = null;
+        let editorPendingCutEnd = null;
+        let editorMarkers = [];
+        let editorEstimatedFPS = 30;
+        let editorFrameOffset = 1 / 30;
+        let editorMediaStartTime = null;
+        let editorMediaFrameCount = 0;
+        let editorScrubbingMouseDown = false;
+        let editorCurrentAppliedRotation = 0;
+
         const mainContainer = document.querySelector('.main-container');
         const showDatesCheckbox = document.getElementById('show-dates-checkbox');
         const showNumbersCheckbox = document.getElementById('show-numbers-checkbox');
@@ -682,7 +797,300 @@
             }
         }
 
+        // Editor Helper Functions
+        function editorTimeToFrame(time) {
+            return Math.round(time * editorEstimatedFPS);
+        }
+        function editorFrameToTime(frame) {
+            return frame / editorEstimatedFPS;
+        }
+        function editorFmtTime(s) {
+            if (!isFinite(s)) s = 0;
+            const ms = Math.floor((s - Math.floor(s)) * 1000);
+            const m = Math.floor(s / 60); const sec = Math.floor(s % 60);
+            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+        }
+        function editorApplyRotationToViewer(d) {
+            editorCurrentAppliedRotation = (d + 360) % 360;
+            editorMainVideo.style.transform = `rotate(${editorCurrentAppliedRotation}deg) translate3d(0,0,0)`;
+        }
+        function editorGetRotationAt(time) {
+            if (!editorMarkers || !editorMarkers.length) return 0;
+            const currentFrame = editorTimeToFrame(time);
+            let rot = 0;
+            for (const m of editorMarkers) {
+                if (currentFrame >= m.frame) {
+                    rot = m.rotation;
+                } else {
+                    break;
+                }
+            }
+            return rot;
+        }
+        function editorRenderMarkers() {
+            editorTimeline.querySelectorAll('.editor-marker, .editor-delete-x, .editor-cut-region, .editor-pending-marker').forEach(x => x.remove());
+            if (!editorMainVideo.duration) return;
+            const w = editorTimeline.clientWidth;
+
+            editorCurrentCuts.forEach(cut => {
+                const startX = (cut.start / editorMainVideo.duration) * w;
+                const endX = (cut.end / editorMainVideo.duration) * w;
+                const region = document.createElement('div');
+                region.className = 'editor-cut-region';
+                region.style.left = `${startX}px`;
+                region.style.width = `${endX - startX}px`;
+                editorTimeline.appendChild(region);
+            });
+
+            if (editorPendingCutStart !== null) {
+                const x = (editorPendingCutStart / editorMainVideo.duration) * w;
+                const marker = document.createElement('div');
+                marker.className = 'editor-pending-marker';
+                marker.style.left = `${x}px`;
+                editorTimeline.appendChild(marker);
+            }
+            if (editorPendingCutEnd !== null) {
+                const x = (editorPendingCutEnd / editorMainVideo.duration) * w;
+                const marker = document.createElement('div');
+                marker.className = 'editor-pending-marker';
+                marker.style.left = `${x}px`;
+                editorTimeline.appendChild(marker);
+            }
+
+            (editorMarkers || []).forEach((m, idx) => {
+                const t = editorFrameToTime(m.frame);
+                const x = (t / editorMainVideo.duration) * w;
+                const mark = document.createElement('div');
+                mark.className = 'editor-marker';
+                mark.dataset.rot = m.rotation;
+                mark.style.left = x + 'px';
+                mark.onclick = (e) => {
+                    e.stopPropagation();
+                    editorMainVideo.currentTime = t;
+                    editorApplyRotationToViewer(m.rotation);
+                };
+                editorTimeline.appendChild(mark);
+
+                const del = document.createElement('div');
+                del.className = 'editor-delete-x';
+                del.style.left = x + 'px';
+                del.textContent = '❌';
+                del.onclick = e => {
+                    e.stopPropagation();
+                    editorMarkers.splice(idx, 1);
+                    editorRenderMarkers();
+                };
+                editorTimeline.appendChild(del);
+            });
+        }
+        function editorRenderLoop(now, metadata) {
+            if (!editorMainVideo.duration) return;
+            const currentTime = metadata.mediaTime;
+            if (!editorMainVideo.paused && editorMediaStartTime === null) {
+                editorMediaStartTime = currentTime;
+                editorMediaFrameCount = 1;
+            } else if (!editorMainVideo.paused) {
+                editorMediaFrameCount++;
+            }
+            if (editorMediaStartTime !== null && currentTime - editorMediaStartTime >= 2) {
+                editorEstimatedFPS = editorMediaFrameCount / (currentTime - editorMediaStartTime);
+                editorFrameOffset = 1 / editorEstimatedFPS;
+                editorMediaStartTime = null;
+                editorMediaFrameCount = 0;
+            }
+            if (!editorScrubbingMouseDown) {
+                const p = (currentTime / editorMainVideo.duration) * 100;
+                editorProgress.style.width = p + '%';
+                editorScrubber.style.left = p + '%';
+            }
+            editorTimeDisplay.textContent = `${editorFmtTime(currentTime)} / ${editorFmtTime(editorMainVideo.duration)}`;
+            const rot = editorGetRotationAt(currentTime);
+            editorApplyRotationToViewer(rot);
+            const isCut = editorCurrentCuts.some(cut => currentTime >= cut.start && currentTime < cut.end);
+            editorVideoOverlay.style.display = isCut ? 'block' : 'none';
+            editorMainVideo.requestVideoFrameCallback(editorRenderLoop);
+        }
+        function editorRenderCutsList() {
+            editorCutsListContainer.innerHTML = '';
+            if (editorCurrentCuts.length === 0) {
+                editorCutsListContainer.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">No cuts defined.</div>';
+                return;
+            }
+            editorCurrentCuts.sort((a,b) => a.start - b.start).forEach((cut, index) => {
+                const item = document.createElement('div');
+                item.className = 'editor-cut-item';
+                item.innerHTML = `<span>Cut ${index + 1}: ${editorFmtTime(cut.start)} – ${editorFmtTime(cut.end)}</span><span class="editor-delete-cut-btn">❌</span>`;
+                item.querySelector('.editor-delete-cut-btn').onclick = () => {
+                    editorCurrentCuts.splice(index, 1);
+                    editorUpdateUI();
+                };
+                editorCutsListContainer.appendChild(item);
+            });
+        }
+        function editorUpdateUI() {
+            editorRenderCutsList();
+            editorCutSegmentBtn.disabled = !(editorPendingCutStart !== null && editorPendingCutEnd !== null);
+            editorRenderMarkers();
+        }
+        function editorScrubToPosition(clientX) {
+            const r = editorTimeline.getBoundingClientRect();
+            let p = (clientX - r.left) / r.width;
+            p = Math.max(0, Math.min(1, p));
+            const newTime = p * editorMainVideo.duration;
+            editorMainVideo.currentTime = newTime;
+            editorProgress.style.width = (p * 100) + '%';
+            editorScrubber.style.left = (p * 100) + '%';
+        }
+
+        async function openVideoEditor(videoName, projectPath, subfolder) {
+            const key = projectPath + '|' + videoName;
+            editorCurrentVideo = { videoName, projectPath, subfolder };
+            editorFileInfo.textContent = `${videoName} (${projectPath})`;
+
+            const selection = shortcutSelections.get(key) || {};
+            editorCurrentCuts = selection.cuts ? JSON.parse(JSON.stringify(selection.cuts)) : [];
+            editorMarkers = selection.markers ? JSON.parse(JSON.stringify(selection.markers)) : [];
+            if (editorMarkers.length === 0 && selection.rotation && selection.rotation !== "0") {
+                editorMarkers = [{ frame: 0, rotation: parseInt(selection.rotation) }];
+            }
+            editorPendingCutStart = null;
+            editorPendingCutEnd = null;
+            editorEstimatedFPS = 30;
+            editorFrameOffset = 1 / 30;
+            editorMediaStartTime = null;
+            editorMediaFrameCount = 0;
+
+            // Find video file
+            let videoFile = null;
+            const project = allProjectFolders.find(p => p.path === projectPath);
+            if (project) {
+                async function scanForFile(dirHandle, sub) {
+                    for await (const entry of dirHandle.values()) {
+                        if (entry.kind === 'file' && entry.name === videoName) {
+                            return await entry.getFile();
+                        } else if (entry.kind === 'directory' && !skipDirs.has(entry.name.toLowerCase())) {
+                            const res = await scanForFile(entry, sub);
+                            if (res) return res;
+                        }
+                    }
+                    return null;
+                }
+                videoFile = await scanForFile(project.handle, subfolder);
+            }
+
+            if (!videoFile) {
+                alert('Could not find video file.');
+                return;
+            }
+
+            if (currentVideoUrl) URL.revokeObjectURL(currentVideoUrl);
+            currentVideoUrl = URL.createObjectURL(videoFile);
+            editorMainVideo.src = currentVideoUrl;
+            editorModal.style.display = 'flex';
+        }
+
         function init() {
+            closeEditorModal.addEventListener('click', () => {
+                editorModal.style.display = 'none';
+                editorMainVideo.pause();
+                editorMainVideo.src = '';
+            });
+
+            editorPlayPauseBtn.addEventListener('click', () => {
+                if (editorMainVideo.paused) {
+                    editorMainVideo.play();
+                    editorPlayPauseBtn.textContent = '⏸ Pause';
+                } else {
+                    editorMainVideo.pause();
+                    editorPlayPauseBtn.textContent = '▶️ Play';
+                }
+            });
+
+            editorMarkStartBtn.onclick = () => {
+                editorPendingCutStart = editorMainVideo.currentTime;
+                if (editorPendingCutEnd !== null && editorPendingCutEnd < editorPendingCutStart) {
+                    [editorPendingCutStart, editorPendingCutEnd] = [editorPendingCutEnd, editorPendingCutStart];
+                }
+                editorUpdateUI();
+            };
+            editorMarkEndBtn.onclick = () => {
+                editorPendingCutEnd = editorMainVideo.currentTime;
+                if (editorPendingCutStart !== null && editorPendingCutEnd < editorPendingCutStart) {
+                    [editorPendingCutStart, editorPendingCutEnd] = [editorPendingCutEnd, editorPendingCutStart];
+                }
+                editorUpdateUI();
+            };
+            editorCutSegmentBtn.onclick = () => {
+                if (editorPendingCutStart !== null && editorPendingCutEnd !== null) {
+                    editorCurrentCuts.push({ start: editorPendingCutStart, end: editorPendingCutEnd });
+                    editorPendingCutStart = null;
+                    editorPendingCutEnd = null;
+                    editorUpdateUI();
+                }
+            };
+
+            editorFrameBackBtn.onclick = () => editorMainVideo.currentTime -= editorFrameOffset;
+            editorFrameForwardBtn.onclick = () => editorMainVideo.currentTime += editorFrameOffset;
+
+            [editorRotLeftBtn, editorRot180Btn, editorRotRightBtn].forEach(b => {
+                b.onclick = () => {
+                    const d = b.id === 'editor-rotLeft' ? 270 : b.id === 'editor-rot180' ? 180 : 90;
+                    const nr = (editorCurrentAppliedRotation + d) % 360;
+                    editorApplyRotationToViewer(nr);
+                    const currentFrame = editorTimeToFrame(editorMainVideo.currentTime);
+                    editorMarkers.push({ frame: currentFrame, rotation: nr });
+                    editorMarkers.sort((a, b) => a.frame - b.frame);
+                    editorRenderMarkers();
+                };
+            });
+
+            editorTimeline.onmousedown = e => {
+                editorScrubbingMouseDown = true;
+                editorScrubToPosition(e.clientX);
+            };
+            window.addEventListener('mousemove', e => {
+                if (editorScrubbingMouseDown) editorScrubToPosition(e.clientX);
+            });
+            window.addEventListener('mouseup', () => {
+                editorScrubbingMouseDown = false;
+            });
+
+            editorMainVideo.onloadedmetadata = () => {
+                editorUpdateUI();
+                editorMainVideo.requestVideoFrameCallback(editorRenderLoop);
+            };
+
+            editorCommitBtn.onclick = () => {
+                const key = editorCurrentVideo.projectPath + '|' + editorCurrentVideo.videoName;
+                let selection = shortcutSelections.get(key);
+                if (!selection) {
+                    selection = {
+                        videoName: editorCurrentVideo.videoName,
+                        projectPath: editorCurrentVideo.projectPath,
+                        subfolder: editorCurrentVideo.subfolder,
+                        type: '', rotation: "0"
+                    };
+                    shortcutSelections.set(key, selection);
+                }
+                selection.cuts = JSON.parse(JSON.stringify(editorCurrentCuts));
+                selection.markers = JSON.parse(JSON.stringify(editorMarkers));
+                if (editorMarkers.length > 0) {
+                    selection.rotation = editorMarkers[editorMarkers.length - 1].rotation.toString();
+                }
+                selection.fps = editorEstimatedFPS;
+
+                // Close editor
+                editorModal.style.display = 'none';
+                editorMainVideo.pause();
+                editorMainVideo.src = '';
+
+                // Update UI in main view
+                const row = document.querySelector(`.landscape-row[data-video-name="${editorCurrentVideo.videoName}"][data-project-path="${editorCurrentVideo.projectPath}"]`);
+                if (row) {
+                    updateRowUI(row, editorCurrentVideo.videoName, editorCurrentVideo.projectPath);
+                }
+            };
+
             loadMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 optionsDropdown.style.display = 'none';
@@ -1229,6 +1637,7 @@
                 updateRowUI(rowDiv, videoName, projectPath);
             };
 
+            leftGroup.appendChild(createDeleteCross(videoName, projectPath, subfolder, rowDiv));
             leftGroup.appendChild(createBtn('Rotate Left', () => rotate(-90)));
             leftGroup.appendChild(createBtn('Rotate Right', () => rotate(90)));
             leftGroup.appendChild(createBtn('Both', () => setType('both-sc'), 'both-sc', '--both-sc-color'));
@@ -1283,13 +1692,21 @@
 
             leftGroup.appendChild(moveSelect);
 
+            const editBtn = document.createElement('button');
+            editBtn.className = 'bar-button row-bar-btn';
+            editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+            editBtn.title = 'Edit video';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                openVideoEditor(videoName, projectPath, subfolder);
+            };
+            leftGroup.appendChild(editBtn);
+
             bar.appendChild(leftGroup);
 
             const rightGroup = document.createElement('div');
             rightGroup.className = 'row-action-group-right';
             
-            rightGroup.appendChild(createDeleteCross(videoName, projectPath, subfolder, rowDiv));
-
             const nameSpan = document.createElement('span');
             nameSpan.className = 'row-video-name';
             nameSpan.textContent = videoName;
@@ -1387,16 +1804,20 @@
         function layoutLandscapeThumbnails() {
             const scale = parseFloat(sizeSelector.value);
             const elements = document.querySelectorAll('.landscape-row, .project-header, hr');
+            const showNumbers = showNumbersCheckbox.checked;
+            const paddingLeft = showNumbers ? 40 : 20;
 
             elements.forEach(element => {
                 if (element.classList.contains('landscape-row')) {
                     const wrappers = element.querySelectorAll('.thumbnail-wrapper');
+                    let sampleOriginalHeight = 180;
                     wrappers.forEach(wrapper => {
                         const thumb = wrapper.querySelector('.thumbnail');
                         if (!thumb.dataset.originalWidth) return;
                         
                         const originalWidth = parseFloat(thumb.dataset.originalWidth);
                         const originalHeight = parseFloat(thumb.dataset.originalHeight);
+                        sampleOriginalHeight = originalHeight;
                         const scaledWidth = originalWidth * scale;
                         const scaledHeight = originalHeight * scale;
                         
@@ -1413,6 +1834,12 @@
                         thumb.style.width = scaledWidth + 'px';
                         thumb.style.height = scaledHeight + 'px';
                     });
+
+                    const bar = element.querySelector('.row-action-bar');
+                    if (bar) {
+                        const targetWidth = paddingLeft + (6 * (sampleOriginalHeight * scale)) + (5 * 10) + 20;
+                        bar.style.maxWidth = targetWidth + 'px';
+                    }
                 }
             });
             updateRowNumbers();
@@ -1426,6 +1853,16 @@
 
         function generateShortcutScript() {
             const selectionsToProcess = Array.from(shortcutSelections.values());
+
+            // Check if any selections have editor changes (cuts or complex markers)
+            const hasEditorChanges = selectionsToProcess.some(sel => (sel.cuts && sel.cuts.length > 0) || (sel.markers && sel.markers.length > 1));
+
+            if (hasEditorChanges) {
+                // If there are editor changes, we'll generate a script that handles both shortcuts and video processing
+                // For simplicity and since the user asked for edit/s to be carried out when script is generated
+                // we will integrate FFmpeg logic.
+            }
+
             const displayedProjectPaths = new Set(Array.from(canvases.values()).map(c => c.path));
             const selectedProjectPaths = new Set();
             selectionsToProcess.forEach(s => {
@@ -1444,6 +1881,87 @@
             let scriptLines = [
                 '\$PSScriptRoot = Split-Path -Parent -Path \$MyInvocation.MyCommand.Definition',
                 '\$wshell = New-Object -ComObject WScript.Shell',
+                '',
+                'function Process-Video {',
+                '    param([string]\$sourcePath, [string]\$targetPath, [array]\$cuts, [array]\$markers)',
+                '    \$tempDir = Join-Path -Path \$env:TEMP -ChildPath ([System.Guid]::NewGuid().ToString())',
+                '    New-Item -ItemType Directory -Path \$tempDir | Out-Null',
+                '    ',
+                '    \$baseName = [System.IO.Path]::GetFileNameWithoutExtension(\$sourcePath)',
+                '    \$safeBase = \$baseName -replace "[^a-zA-Z0-9_]", "_"',
+                '    ',
+                '    # Simplified logic: if no cuts and only one rotation, just use one segment.',
+                '    # For full implementation, we need timeline points.',
+                '    \$duration = (ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "\$sourcePath") -as [double]',
+                '    ',
+                '    \$points = New-Object System.Collections.Generic.List[double]',
+                '    \$points.Add(0)',
+                '    \$points.Add(\$duration)',
+                '    foreach (\$m in \$markers) { \$points.Add(\$m.time) }',
+                '    foreach (\$c in \$cuts) { \$points.Add(\$c.start); \$points.Add(\$c.end) }',
+                '    ',
+                '    \$sortedPoints = \$points | Sort-Object | Select-Object -Unique',
+                '    ',
+                '    \$segments = @()',
+                '    \$maxW = 0',
+                '    \$maxH = 0',
+                '    ',
+                '    # Probe for initial dimensions',
+                '    \$metadata = (ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "\$sourcePath") -split ''x''',
+                '    \$sw = [int]\$metadata[0]',
+                '    \$sh = [int]\$metadata[1]',
+                '    ',
+                '    for (\$i = 0; \$i -lt \$sortedPoints.Count - 1; \$i++) {',
+                '        \$start = \$sortedPoints[\$i]',
+                '        \$end = \$sortedPoints[\$i+1]',
+                '        if (\$end - \$start -lt 0.001) { continue }',
+                '        ',
+                '        \$mid = (\$start + \$end) / 2',
+                '        \$isCut = \$false',
+                '        foreach (\$c in \$cuts) { if (\$mid -ge \$c.start -and \$mid -lt \$c.end) { \$isCut = \$true; break } }',
+                '        if (\$isCut) { continue }',
+                '        ',
+                '        \$rotation = 0',
+                '        foreach (\$m in \$markers) { if (\$start -ge \$m.time) { \$rotation = \$m.rotation } }',
+                '        ',
+                '        \$curW = \$sw',
+                '        \$curH = \$sh',
+                '        if (\$rotation -eq 90 -or \$rotation -eq 270) {',
+                '            \$curW = \$sh',
+                '            \$curH = \$sw',
+                '        }',
+                '        if (\$curW -gt \$maxW) { \$maxW = \$curW }',
+                '        if (\$curH -gt \$maxH) { \$maxH = \$curH }',
+                '        ',
+                '        \$segments += @{ start = \$start; end = \$end; rotation = \$rotation }',
+                '    }',
+                '    ',
+                '    if (\$segments.Count -eq 0) { Write-Host "All content cut for \$sourcePath"; return }',
+                '    ',
+                '    # Ensure even dimensions for libx264',
+                '    \$maxW = [Math]::Ceiling(\$maxW / 2) * 2',
+                '    \$maxH = [Math]::Ceiling(\$maxH / 2) * 2',
+                '    ',
+                '    \$listPath = Join-Path -Path \$tempDir -ChildPath "list.txt"',
+                '    \$segIndex = 0',
+                '    foreach (\$seg in \$segments) {',
+                '        \$outSeg = Join-Path -Path \$tempDir -ChildPath ("seg{0:D3}.mp4" -f \$segIndex++)',
+                '        \$transpose = ""',
+                '        if (\$seg.rotation -eq 90) { \$transpose = "transpose=1," }',
+                '        elseif (\$seg.rotation -eq 180) { \$transpose = "transpose=1,transpose=1," }',
+                '        elseif (\$seg.rotation -eq 270) { \$transpose = "transpose=2," }',
+                '        ',
+                '        # Scale and pad to match max dimensions to allow concatenation',
+                '        \$vf = "\$transpose" + "scale=(iw*sar)*min(\$maxW/(iw*sar)\\\,\$maxH/ih):ih*min(\$maxW/(iw*sar)\\\,\$maxH/ih),pad=\$maxW:\$maxH:(\$maxW-iw*min(\$maxW/iw\\\,\$maxH/ih))/2:(\$maxH-ih*min(\$maxW/iw\\\,\$maxH/ih))/2"',
+                '        ',
+                '        \$dur = \$seg.end - \$seg.start',
+                '        ffmpeg -y -i "\$sourcePath" -ss \$seg.start -t \$dur -vf "\$vf" -c:v libx264 -crf 17 -preset fast -c:a copy -avoid_negative_ts make_zero "\$outSeg" 2>\$null',
+                '        (echo "file ''\$outSeg''") | Out-File -FilePath \$listPath -Append -Encoding utf8',
+                '    }',
+                '    ',
+                '    ffmpeg -y -f concat -safe 0 -i "\$listPath" -c copy "\$targetPath" 2>\$null',
+                '    Remove-Item -Path \$tempDir -Recurse -Force',
+                '}',
                 '',
                 'function Update-RotationData {',
                 '    param([string]\$filePath, [hashtable]\$toAdd, [string[]]\$toRemove)',
@@ -1590,8 +2108,11 @@
             selectionsToProcess.forEach(sel => {
                 const key = sel.projectPath + '|' + sel.videoName;
                 const initial = initialShortcutSelections.get(key);
-                if (initial && initial.type === sel.type && !sel.targetProject) {
-                    return; // Skip if unchanged and not moved
+
+                const hasEdits = (sel.cuts && sel.cuts.length > 0) || (sel.markers && sel.markers.length > 1);
+
+                if (initial && initial.type === sel.type && !sel.targetProject && !hasEdits) {
+                    return; // Skip if unchanged, not moved, and no edits
                 }
                 
                 const selectionType = sel.type;
@@ -1601,6 +2122,40 @@
                 const escapedProjectPath = escapePSString(sel.projectPath);
                 const escapedSubfolder = escapePSString(sel.subfolder);
                 const escapedTargetProjectPath = sel.targetProject ? escapePSString(sel.targetProject) : null;
+
+                if (hasEdits) {
+                    scriptLines.push(`    # Processing edits for: ${sel.projectPath}\\${sel.videoName}`);
+                    let sourcePathVar = '\$PSScriptRoot';
+                    if (escapedProjectPath) sourcePathVar = `(Join-Path -Path ${sourcePathVar} -ChildPath '${escapedProjectPath}')`;
+                    if (escapedSubfolder) sourcePathVar = `(Join-Path -Path ${sourcePathVar} -ChildPath '${escapedSubfolder}')`;
+                    scriptLines.push(`    \$sourceVideoPath = Join-Path -Path ${sourcePathVar} -ChildPath '${escapedVideoName}'`);
+
+                    scriptLines.push(`    \$cuts = @()`);
+                    sel.cuts.forEach(c => {
+                        scriptLines.push(`    \$cuts += @{ start = ${c.start}; end = ${c.end} }`);
+                    });
+                    scriptLines.push(`    \$markers = @()`);
+                    sel.markers.forEach(m => {
+                        // markers in selection use 'frame', we need 'time'
+                        const fps = sel.fps || 30;
+                        const time = m.frame / fps;
+                        scriptLines.push(`    \$markers += @{ time = ${time}; rotation = ${m.rotation} }`);
+                    });
+
+                    scriptLines.push(`    \$processedVideoPath = Join-Path -Path (Split-Path -Parent \$sourceVideoPath) -ChildPath ('processed_' + '${escapedVideoName}')`);
+                    scriptLines.push(`    Process-Video -sourcePath \$sourceVideoPath -targetPath \$processedVideoPath -cuts \$cuts -markers \$markers`);
+                    scriptLines.push(`    if (Test-Path -LiteralPath \$processedVideoPath) {`);
+                    scriptLines.push(`        Move-Item -LiteralPath \$processedVideoPath -Destination \$sourceVideoPath -Force`);
+                    scriptLines.push(`        Write-Host "Applied edits to: ${escapedVideoName}"`);
+
+                    // Clear rotation metadata for this file since it's now burnt-in
+                    const projPath = sel.projectPath;
+                    const escapedProjPath = escapePSString(projPath);
+                    const projPathVar = escapedProjPath ? `(Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjPath}')` : '\$PSScriptRoot';
+                    const rotFileVar = `(Join-Path -Path ${projPathVar} -ChildPath 'rotation_data.txt')`;
+                    scriptLines.push(`        Update-RotationData -filePath ${rotFileVar} -toAdd @{} -toRemove @('${escapedVideoName}')`);
+                    scriptLines.push(`    }`);
+                }
 
                 let targetPathConstruction = '\$PSScriptRoot';
                 if (escapedTargetProjectPath !== null) {

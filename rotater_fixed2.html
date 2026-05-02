@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VirtualDub-like Rotation Marker Tool — Phase 8 (Frame-Accurate)</title>
+<style>
+:root{
+  --bg:#121212;--panel:#1f1f1f;--muted:#888;
+  --cyan:#00e5ff;--yellow:#ffca28;--pink:#ff4081;
+  --accent:#00acc1;--green:#43a047;--blue:#2196f3;
+}
+html,body{
+  height:100%;margin:0;background:var(--bg);color:#eee;
+  font-family:Inter,Arial,Helvetica,sans-serif
+}
+.app{display:flex;height:100vh;gap:12px}
+#sidebar{
+  width:320px;background:var(--panel);padding:14px;box-sizing:border-box;
+  border-right:2px solid #222;overflow:auto
+}
+#sidebar h2{margin:4px 0 12px;font-size:18px;text-align:center}
+#loadFolder{
+  width:100%;padding:10px;border-radius:6px;background:#2176d2;
+  border:2px solid #1b5f9b;color:white;cursor:pointer
+}
+#videoList{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.thumb{
+  display:flex;gap:8px;align-items:center;padding:8px;background:#2a2a2a;
+  border-radius:6px;cursor:pointer
+}
+.thumb .icon, .thumb-img{
+  width:90px;height:56px;background:#000;border-radius:4px;
+  object-fit:cover;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.thumb p{
+  margin:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  flex-grow:1;
+}
+.thumb.committed p{
+  text-decoration:underline;text-decoration-color:var(--blue);
+  text-decoration-thickness:2px
+}
+.thumb.active {
+  background: #006c7a;
+  border: 1px solid var(--accent);
+}
+#main{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:12px;
+  padding:18px;box-sizing:border-box
+}
+#fileInfo{font-size:15px;color:#ddd}
+#playerRow{
+  display:flex;align-items:center;gap:12px;width:100%;justify-content:center
+}
+.navBtn{
+  background:#222;border:2px solid #333;color:#fff;padding:10px 12px;
+  border-radius:6px;cursor:pointer;font-size:18px
+}
+#playerWrap{
+  display:flex;flex-direction:column;align-items:center;
+  width:100%;max-width:1100px
+}
+#videoContainer{
+  width:100%;display:flex;align-items:center;justify-content:center;
+  min-height:260px;
+  position: relative; /* Needed for overlay */
+}
+#videoOverlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  pointer-events: none;
+  display: none; /* Hidden by default */
+  z-index: 10;
+}
+#seekOverlay {
+  display: none !important;
+  background: transparent !important;
+}
+#mainVideo{
+  max-width:90%;max-height:68vh;background:black;border-radius:6px;
+  object-fit:contain;transform:rotate(0deg) translate3d(0,0,0);
+  will-change: transform;
+}
+#timelineWrap{width:98%;position:relative;user-select:none}
+#timeline{
+  height:18px;background:#333;border-radius:9px;position:relative;
+  cursor:pointer;margin-bottom:36px
+}
+#scrubber{
+  position:absolute;top:50%;left:0;width:22px;height:22px;
+  background:#fff;border-radius:50%;transform:translate(-50%,-50%);
+  cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.5);
+}
+.progress{
+  position:absolute;left:0;top:0;height:100%;background:var(--accent);
+  border-radius:9px;width:0%
+}
+.marker{
+  position:absolute;top:0;width:6px;height:18px;transform:translateX(-50%);
+  border-radius:3px;box-shadow:0 0 4px rgba(0,0,0,.6)
+}
+.marker[data-rot="270"]{background:var(--cyan)}
+.marker[data-rot="180"]{background:var(--yellow)}
+.marker[data-rot="90"]{background:var(--pink)}
+
+.cut-region {
+  position: absolute;
+  top: 0; height: 100%;
+  background: rgba(255, 82, 82, 0.5);
+  pointer-events: none; /* So they don't block clicks on timeline */
+}
+.pending-marker {
+  position: absolute;
+  top: -4px; /* Stand out a bit */
+  width: 4px; height: 26px;
+  transform: translateX(-50%);
+  border-radius: 2px;
+  background: #ff5252;
+}
+
+.delete-x{
+  position:absolute;top:20px;transform:translateX(-50%);
+  font-size:12px;cursor:pointer;color:#ccc
+}
+.delete-x:hover{color:#f44336}
+#tooltip{
+  position:absolute;top:-30px;transform:translateX(-50%);
+  background:#222;padding:5px 8px;border-radius:6px;font-size:12px;
+  color:#ddd;pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(0,0,0,.6);display:none
+}
+#controls{
+  display:flex;gap:8px;align-items:center;width:98%;
+  margin-top:8px;justify-content:space-between;
+}
+.control-group{display:flex;gap:8px;justify-content:center;flex:1}
+#frameControls { margin-bottom: 8px; }
+.frame-btn {
+  background: #333;
+  border: 1px solid #444;
+  font-size: 16px;
+  padding: 4px 10px;
+}
+button{
+  background:#222;color:#fff;border:2px solid transparent;
+  padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px
+}
+#rotLeft{border-color:var(--cyan)}#rot180{border-color:var(--yellow)}
+#rotRight{border-color:var(--pink)}
+#playPause{}#muteBtn{background:#444}
+#generateBtn{background:#4caf50;border-color:#388e3c}
+.greenNav{
+  background:var(--green);border:2px solid #2e7d32;color:#fff;
+  padding:8px 10px;border-radius:6px;cursor:pointer
+}
+#processedCount{color:#ddd}
+#processedActions{display:flex;gap:8px;align-items:center;}
+.small{font-size:12px;color:var(--muted)}
+
+#cutsListContainer {
+  width: 98%;
+  margin-top: 10px;
+  background: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.cut-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px;
+  border-bottom: 1px solid #333;
+}
+.cut-item:last-child { border-bottom: none; }
+.delete-cut-btn {
+  cursor: pointer;
+  color: #ff5252;
+  font-weight: bold;
+}
+
+@media(max-width:900px){#sidebar{display:none}}
+</style>
+<script id="indexeddb-helpers">
+// A simple key-value store using IndexedDB
+function get(key) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('vrot-db', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('store');
+    request.onsuccess = () => {
+      const tx = request.result.transaction('store', 'readonly');
+      const store = tx.objectStore('store');
+      const req = store.get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => request.result.close();
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+function set(key, value) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('vrot-db', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('store');
+    request.onsuccess = () => {
+      const tx = request.result.transaction('store', 'readwrite');
+      const store = tx.objectStore('store');
+      const req = store.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+      tx.oncomplete = () => request.result.close();
+    };
+    request.onerror = () => reject(request.error);
+  });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <aside id="sidebar">
+    <h2>Video List</h2>
+    <button id="loadFolder">📁 Load Folder</button>
+    <div id="videoList"></div>
+    <p class="small" style="margin-top:12px">
+      Tip: open via <code>http://localhost</code> for directory access.
+    </p>
+  </aside>
+
+  <main id="main">
+    <div id="fileInfo">No file selected</div>
+
+    <div id="playerRow">
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <button class="navBtn" id="prevBtn">◀</button>
+        <div class="commitRow" style="margin-top:8px">
+          <button class="greenNav" id="commitPrev">◀</button>
+        </div>
+      </div>
+
+      <div id="playerWrap">
+        <div id="videoContainer">
+          <div id="seekOverlay"></div>
+          <div id="videoOverlay"></div>
+          <video id="mainVideo" controls muted preload="metadata"></video>
+        </div>
+        <div id="timelineWrap">
+          <div id="tooltip"></div>
+          <div id="timeline">
+            <div class="progress" id="progress"></div>
+            <div id="scrubber"></div>
+          </div>
+        </div>
+        <div id="frameControls" class="control-group">
+            <button id="frameBackBtn" class="frame-btn">←</button>
+            <button id="frameForwardBtn" class="frame-btn">→</button>
+        </div>
+        <div id="controls">
+          <div class="control-group" style="justify-content:flex-start">
+            <button id="playPause">▶️ Play</button>
+            <button id="muteBtn">🔇 Muted</button>
+          </div>
+          <div class="control-group">
+            <button id="markStartBtn" style="border-color:var(--green)">Mark Start</button>
+            <button id="rotLeft" data-delta="270">90° Left</button>
+            <button id="rot180" data-delta="180">180°</button>
+            <button id="rotRight" data-delta="90">90° Right</button>
+            <button id="markEndBtn" style="border-color:var(--green)">Mark End</button>
+            <button id="cutSegmentBtn" style="background:#d32f2f;color:white" disabled>Cut Segment</button>
+          </div>
+          <div class="control-group" style="justify-content:flex-end">
+            <span id="timeDisplay" class="small">00:00.000 / 00:00.000</span>
+          </div>
+        </div>
+        <div id="cutsListContainer"></div>
+        <div id="processedActions" class="small" style="width:98%;justify-content:space-between;margin-top:8px;">
+          <div class="control-group" style="justify-content:flex-start">
+            <button id="clearProcessed">Clear All</button>
+            <button id="removeCurrentProcessed">Remove Current</button>
+          </div>
+          <div class="control-group">
+            <span id="processedCount">Added 0 video(s)</span>
+          </div>
+          <div class="control-group" style="justify-content:flex-end">
+            <button id="deleteBtn" style="background:#c62828;color:white">Delete Original</button>
+            <button class="greenNav" id="commitCurrentBtn" style="font-size:14px;">Commit</button>
+            <button id="generateBtn" style="background:#4caf50;color:white">Generate .bat</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;align-items:center">
+        <button class="navBtn" id="nextBtn">▶</button>
+        <div class="commitRow" style="margin-top:8px">
+          <button class="greenNav" id="commitNextAlt">▶</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+/* === Core JavaScript (Frame-Accurate Marker System) === */
+
+const loadFolderBtn=document.getElementById('loadFolder');
+const videoList=document.getElementById('videoList');
+const mainVideo=document.getElementById('mainVideo');
+const videoOverlay=document.getElementById('videoOverlay');
+const seekOverlay=document.getElementById('seekOverlay');
+const timeline=document.getElementById('timeline');
+const progress=document.getElementById('progress');
+const scrubber=document.getElementById('scrubber');
+const tooltip=document.getElementById('tooltip');
+const rotLeftBtn=document.getElementById('rotLeft');
+const rot180Btn=document.getElementById('rot180');
+const rotRightBtn=document.getElementById('rotRight');
+const playPauseBtn=document.getElementById('playPause');
+const muteBtn=document.getElementById('muteBtn');
+const prevBtn=document.getElementById('prevBtn');
+const nextBtn=document.getElementById('nextBtn');
+const commitPrev=document.getElementById('commitPrev');
+const commitNextAlt=document.getElementById('commitNextAlt');
+const commitCurrentBtn=document.getElementById('commitCurrentBtn');
+const processedCountLabel=document.getElementById('processedCount');
+const clearProcessedBtn=document.getElementById('clearProcessed');
+const removeCurrentProcessedBtn=document.getElementById('removeCurrentProcessed');
+const fileInfo=document.getElementById('fileInfo');
+const generateBtn=document.getElementById('generateBtn');
+const timeDisplay=document.getElementById('timeDisplay');
+const markStartBtn=document.getElementById('markStartBtn');
+const markEndBtn=document.getElementById('markEndBtn');
+const cutSegmentBtn=document.getElementById('cutSegmentBtn');
+const deleteBtn=document.getElementById('deleteBtn');
+const frameBackBtn = document.getElementById('frameBackBtn');
+const frameForwardBtn = document.getElementById('frameForwardBtn');
+const cutsListContainer=document.getElementById('cutsListContainer');
+
+let videos=[];let currentIndex=-1;let currentAppliedRotation=0;
+let currentCuts=[], pendingCutStart=null, pendingCutEnd=null, currentDeleteOriginal=false;
+let scrubbingMouseDown=false,isScrubbing=false;
+const fileStates=new Map();
+let processedSet=new Set();
+
+// FPS estimation
+let estimatedFPS = 30;
+let mediaStartTime = null;
+let mediaFrameCount = 0;
+let frameOffset = 1 / estimatedFPS;
+
+// Helper: frame <-> time conversions
+function timeToFrame(time) {
+  // Guard against zero FPS (shouldn't happen; estimatedFPS defaults to 30)
+  const fps = (isFinite(estimatedFPS) && estimatedFPS > 0) ? estimatedFPS : 30;
+  return Math.round(time * fps);
+}
+function frameToTime(frame) {
+  const fps = (isFinite(estimatedFPS) && estimatedFPS > 0) ? estimatedFPS : 30;
+  return frame / fps;
+}
+
+// Persistence for all states
+function saveState(){
+  localStorage.setItem('processedVideos', JSON.stringify(Array.from(processedSet)));
+  // Convert Map to array for stringification
+  localStorage.setItem('videoStates', JSON.stringify(Array.from(fileStates.entries())));
+}
+function loadState(){
+  const savedProcessed = localStorage.getItem('processedVideos');
+  if (savedProcessed) processedSet = new Set(JSON.parse(savedProcessed));
+  else processedSet = new Set();
+
+  const savedStates = localStorage.getItem('videoStates');
+  if (savedStates) {
+    const entries = JSON.parse(savedStates);
+    for (const [key, value] of entries) {
+      fileStates.set(key, value);
+    }
+  }
+}
+window.onload = init;
+
+async function init() {
+  loadState(); // Load settings and processed list first
+  try {
+    const dirHandle = await get('lastDirectory');
+    if (dirHandle) {
+      // Check for permission, requesting if necessary.
+      const hasPermission = await dirHandle.queryPermission({ mode: 'read' }) === 'granted' ||
+                            await dirHandle.requestPermission({ mode: 'read' }) === 'granted';
+      if (hasPermission) {
+        console.log('Auto-loading last used directory.');
+        await processDirectory(dirHandle);
+      } else {
+        console.log('Permission denied for auto-loading.');
+      }
+    }
+  } catch (err) {
+    console.error('Could not auto-load directory:', err);
+    await set('lastDirectory', null); // Clear invalid handle on error.
+  }
+}
+
+function fmtTime(s){
+ if(!isFinite(s))s=0;
+ const ms=Math.floor((s-Math.floor(s))*1000);
+ const m=Math.floor(s/60);const sec=Math.floor(s%60);
+ return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+}
+function currentVideo(){return videos[currentIndex]||null}
+
+/* === Folder loading === */
+async function processDirectory(dirHandle) {
+  try {
+    await set('lastDirectory', dirHandle); // Save the handle
+    videos = [];
+    for await (const e of dirHandle.values()) {
+      if (e.kind === 'file' && /\.(mp4|webm|mov|mkv)$/i.test(e.name)) {
+        const f = await e.getFile();
+        const u = URL.createObjectURL(f);
+        const thumb = await generateThumbnail(f);
+        videos.push({ name: f.name, url: u, file: f, markers: [], seen: false, thumb: thumb });
+      }
+    }
+    if (!videos.length) return alert('No supported videos found in the selected directory.');
+    videos.sort((a, b) => a.name.localeCompare(b.name));
+    renderVideoList();
+  } catch(err) {
+    if (err.name !== 'AbortError') {
+      console.error('Error processing directory:', err);
+      alert('There was an error reading the directory. You may need to grant permission again.');
+      // Clear the saved handle if permission is the issue
+      await set('lastDirectory', null);
+    }
+  }
+}
+
+async function generateThumbnail(file){
+ return new Promise(res=>{
+  const video=document.createElement('video');
+  video.preload='metadata';
+  video.src=URL.createObjectURL(file);
+  video.onloadedmetadata=()=>{ try { video.currentTime=0.1; } catch(e) { video.currentTime=0; } };
+  video.onseeked=()=>{
+   const canvas=document.createElement('canvas');
+   canvas.width=video.videoWidth;
+   canvas.height=video.videoHeight;
+   const ctx=canvas.getContext('2d');
+   ctx.drawImage(video,0,0,canvas.width,canvas.height);
+   res(canvas.toDataURL('image/jpeg'));
+   video.src=''; // Clean up
+  };
+  video.onerror=()=>res(''); // Return empty on error
+ });
+}
+
+loadFolderBtn.addEventListener('click',async()=>{
+  try {
+    const dirHandle = await window.showDirectoryPicker();
+    await processDirectory(dirHandle);
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Failed to open directory.');
+  }
+});
+
+/* === Sidebar === */
+function renderVideoList(){
+ videoList.innerHTML='';
+ videos.forEach((v,i)=>{
+  const d=document.createElement('div');
+  let classes = 'thumb';
+  if (processedSet.has(v.name)) classes += ' committed';
+  if (i === currentIndex) classes += ' active';
+  d.className = classes;
+  
+  const thumbHTML=v.thumb
+    ?`<img src="${v.thumb}" class="thumb-img" alt="Thumbnail for ${v.name}">`
+    :`<div class="icon">🎞️</div>`;
+  d.innerHTML=`${thumbHTML}<div style="flex:1;overflow:hidden;"><p title="${v.name}">${v.name}</p></div>`;
+  d.onclick=()=>selectVideo(i);
+  videoList.appendChild(d);
+ });
+ processedCountLabel.textContent=`Added ${processedSet.size} video(s)`;
+}
+
+/* === Select video === */
+function selectVideo(i){
+  if(currentIndex>=0) saveCurrentState();
+  currentIndex=i;
+  const v=videos[i];
+
+  if(!fileStates.has(v.name)){
+    fileStates.set(v.name, {
+      time: 0,
+      markers: [],
+      rotation: 0,
+      cuts: [],
+      deleteOriginal: false,
+      width: 0,
+      height: 0,
+      duration: 0
+    });
+  }
+  const s = fileStates.get(v.name);
+  mainVideo.src = v.url;
+
+  // Reset FPS estimation for new video
+  estimatedFPS = 30;
+  frameOffset = 1 / estimatedFPS;
+  mediaStartTime = null;
+  mediaFrameCount = 0;
+
+  // Load state for the new video
+  currentCuts = (s.cuts || []).slice();
+  currentDeleteOriginal = s.deleteOriginal;
+  pendingCutStart = null;
+  pendingCutEnd = null;
+
+  // onloadedmetadata will pick up markers (converted to frames if needed)
+  updateFileInfo();
+  updateUI(); // Also call here for immediate UI update
+  renderVideoList();
+}
+
+/* === Save/restore === */
+function saveCurrentState(){
+  const v=currentVideo(); if(!v) return;
+  const state = fileStates.get(v.name) || {};
+  // Update the state object with current values
+  state.time = mainVideo.currentTime || 0;
+  state.markers = v.markers.slice(); // markers are stored as {frame, rotation}
+  state.rotation = currentAppliedRotation;
+  state.width = mainVideo.videoWidth || 0;
+  state.height = mainVideo.videoHeight || 0;
+  state.duration = mainVideo.duration || 0;
+  state.cuts = currentCuts.slice();
+  state.deleteOriginal = currentDeleteOriginal;
+  fileStates.set(v.name, state);
+}
+
+function updateCutDeleteUI(){
+  // Not used in current UI (left for possible future expansion)
+}
+function updateFileInfo(){
+ const v=currentVideo();
+ fileInfo.textContent=v?`${v.name} — ${currentIndex+1}/${videos.length}`:'No file';
+ if(v&&processedSet.has(v.name)){
+  fileInfo.style.textDecoration='underline';
+  fileInfo.style.textDecorationColor='var(--blue)';
+  fileInfo.style.textDecorationThickness='2px';
+ }else{
+  fileInfo.style.textDecoration='none';
+ }
+}
+
+/* === Navigation === */
+function goToIndex(i){if(!videos.length)return;
+ const n=(i%videos.length+videos.length)%videos.length;
+ selectVideo(n);}
+prevBtn.onclick=()=>goToIndex(currentIndex-1);
+nextBtn.onclick=()=>goToIndex(currentIndex+1);
+window.onkeydown=e=>{
+ if(e.key==='ArrowLeft')goToIndex(currentIndex-1);
+ if(e.key==='ArrowRight')goToIndex(currentIndex+1);
+};
+
+/* === Rotation / Markers (frame-based) === */
+function applyRotationToViewer(d){
+  currentAppliedRotation = (d + 360) % 360;
+  mainVideo.style.transform = `rotate(${currentAppliedRotation}deg) translate3d(0,0,0)`;
+}
+
+function getRotationAt(time) {
+  const v = currentVideo();
+  if (!v || !v.markers || !v.markers.length) return 0;
+  const currentFrame = timeToFrame(time);
+  let rot = 0;
+  for (const m of v.markers) {
+    if (currentFrame >= m.frame) {
+      rot = m.rotation;
+    } else {
+      break;
+    }
+  }
+  return rot;
+}
+
+function addMarker(rot){
+ const v=currentVideo();if(!v)return;
+ const currentFrame = timeToFrame(mainVideo.currentTime);
+ // Prevent duplicates at same frame with same rotation (optional)
+ // v.markers = v.markers.filter(m => !(m.frame === currentFrame && m.rotation === rot));
+ v.markers.push({frame:currentFrame,rotation:rot});
+ v.markers.sort((a,b)=>a.frame-b.frame);
+ renderMarkers();
+}
+[rotLeftBtn,rot180Btn,rotRightBtn].forEach(b=>b.onclick=()=>{
+ const d=parseInt(b.dataset.delta,10);
+ const nr=(currentAppliedRotation+d)%360;
+ applyRotationToViewer(nr);
+ addMarker(nr);
+});
+
+/* === Markers render === */
+function renderMarkers(){
+  timeline.querySelectorAll('.marker,.delete-x,.cut-region,.pending-marker').forEach(x => x.remove());
+  const v = currentVideo();
+  if (!v || !mainVideo.duration) return;
+  const w = timeline.clientWidth;
+
+  // Render committed cut regions
+  currentCuts.forEach(cut => {
+    const startX = (cut.start / mainVideo.duration) * w;
+    const endX = (cut.end / mainVideo.duration) * w;
+    const region = document.createElement('div');
+    region.className = 'cut-region';
+    region.style.left = `${startX}px`;
+    region.style.width = `${endX - startX}px`;
+    timeline.appendChild(region);
+  });
+
+  // Render pending cut markers
+  if (pendingCutStart !== null) {
+    const x = (pendingCutStart / mainVideo.duration) * w;
+    const marker = document.createElement('div');
+    marker.className = 'pending-marker';
+    marker.style.left = `${x}px`;
+    timeline.appendChild(marker);
+  }
+  if (pendingCutEnd !== null) {
+    const x = (pendingCutEnd / mainVideo.duration) * w;
+    const marker = document.createElement('div');
+    marker.className = 'pending-marker';
+    marker.style.left = `${x}px`;
+    timeline.appendChild(marker);
+  }
+
+  // Render rotation markers (frame-based)
+  (v.markers || []).forEach((m, idx) => {
+    const t = frameToTime(m.frame);
+    const x = (t / mainVideo.duration) * w;
+
+    const mark = document.createElement('div');
+    mark.className = 'marker';
+    mark.dataset.rot = m.rotation;
+    mark.style.left = x + 'px';
+    mark.title = `${fmtTime(t)} – ${m.rotation}°`;
+    mark.onclick = (e) => {
+      e.stopPropagation();
+      mainVideo.currentTime = t;
+      applyRotationToViewer(m.rotation);
+    };
+    timeline.appendChild(mark);
+
+    const del = document.createElement('div');
+    del.className = 'delete-x';
+    del.style.left = x + 'px';
+    del.textContent = '❌';
+    del.onclick = e => {
+      e.stopPropagation();
+      v.markers.splice(idx, 1);
+      renderMarkers();
+    };
+    timeline.appendChild(del);
+  });
+}
+
+/* === Playback & Frame-Accurate Rendering === */
+function renderLoop(now, metadata) {
+  if (!mainVideo.duration) return;
+
+  // FPS estimation during playback
+  const currentTime = metadata.mediaTime;
+  if (!mainVideo.paused && mediaStartTime === null) {
+    mediaStartTime = currentTime;
+    mediaFrameCount = 1;
+  } else if (!mainVideo.paused) {
+    mediaFrameCount++;
+  }
+  if (mediaStartTime !== null && currentTime - mediaStartTime >= 2) {
+    estimatedFPS = mediaFrameCount / (currentTime - mediaStartTime);
+    frameOffset = 1 / estimatedFPS;
+    mediaStartTime = null;
+    mediaFrameCount = 0;
+    console.log(`Estimated FPS: ${estimatedFPS.toFixed(2)}`);
+  }
+
+  // Update UI elements based on the video's current time
+  if (!scrubbingMouseDown) {
+    const p = (currentTime / mainVideo.duration) * 100;
+    progress.style.width = p + '%';
+    scrubber.style.left = p + '%';
+  }
+  timeDisplay.textContent = `${fmtTime(currentTime)} / ${fmtTime(mainVideo.duration)}`;
+
+  // Determine and apply the correct rotation for the current frame (frame-based)
+  const rot = getRotationAt(currentTime);
+  applyRotationToViewer(rot);
+
+  // Update the overlay for cut segments
+  const isCut = currentCuts.some(cut => currentTime >= cut.start && currentTime < cut.end);
+  videoOverlay.style.display = isCut ? 'block' : 'none';
+
+  // Request the next frame to continue the loop
+  mainVideo.requestVideoFrameCallback(renderLoop);
+}
+
+// Start the render loop when the video is ready to play
+mainVideo.onloadedmetadata = () => {
+  const s = fileStates.get(currentVideo().name) || {};
+  s.width = mainVideo.videoWidth;
+  s.height = mainVideo.videoHeight;
+  s.duration = mainVideo.duration;
+  // restore last play position
+  mainVideo.currentTime = s.time || 0;
+  
+  const v = currentVideo();
+
+  // Convert any old time-based markers to frame-based markers (back-compat)
+  v.markers = (s.markers || []).map(m => {
+    if (m && typeof m.frame === 'number') return m;
+    if (m && typeof m.time === 'number') return { frame: timeToFrame(m.time), rotation: m.rotation || 0 };
+    // fallback: if legacy object shape unknown, ignore
+    return null;
+  }).filter(Boolean);
+
+  renderMarkers();
+  updateFileInfo();
+  updateUI();
+
+  // Kick off the frame-accurate render loop
+  try {
+    mainVideo.requestVideoFrameCallback(renderLoop);
+  } catch (e) {
+    console.warn('requestVideoFrameCallback not available in this environment. Falling back to timeupdate events.');
+    // Fallback (less accurate) — ensure rotation still updates periodically
+    setInterval(() => {
+      const rt = mainVideo.currentTime || 0;
+      const rot = getRotationAt(rt);
+      applyRotationToViewer(rot);
+      const p = (rt / mainVideo.duration) * 100;
+      progress.style.width = p + '%';
+      scrubber.style.left = p + '%';
+      timeDisplay.textContent = `${fmtTime(rt)} / ${fmtTime(mainVideo.duration)}`;
+    }, 100); // 10Hz fallback
+  }
+};
+playPauseBtn.onclick=()=>{
+ if(mainVideo.paused){mainVideo.play();playPauseBtn.textContent='⏸ Pause';}
+ else{mainVideo.pause();playPauseBtn.textContent='▶️ Play';}
+};
+muteBtn.onclick=()=>{
+ mainVideo.muted=!mainVideo.muted;
+ muteBtn.textContent=mainVideo.muted?'🔇 Muted':'🔊 Unmuted';
+};
+mainVideo.muted=true;
+
+/* === UI Updaters === */
+function renderCutsList() {
+  cutsListContainer.innerHTML = '';
+  if (currentCuts.length === 0) {
+    cutsListContainer.innerHTML = '<div class="small" style="text-align:center;color:var(--muted);">No cuts defined for this video.</div>';
+    return;
+  }
+  currentCuts.sort((a,b) => a.start - b.start).forEach((cut, index) => {
+    const item = document.createElement('div');
+    item.className = 'cut-item';
+    item.innerHTML = `
+      <span>Cut ${index + 1}: ${fmtTime(cut.start)} – ${fmtTime(cut.end)}</span>
+      <span class="delete-cut-btn" data-index="${index}">❌</span>
+    `;
+    item.querySelector('.delete-cut-btn').onclick = () => {
+      currentCuts.splice(index, 1);
+      updateUI();
+    };
+    cutsListContainer.appendChild(item);
+  });
+}
+
+function updateUI() {
+  renderCutsList();
+  
+  // Update button states
+  cutSegmentBtn.disabled = !(pendingCutStart !== null && pendingCutEnd !== null);
+  
+  // Update delete button visual
+  if (currentDeleteOriginal) {
+    deleteBtn.style.background = '#f44336';
+    deleteBtn.textContent = 'Delete Original ✓';
+  } else {
+    deleteBtn.style.background = '#c62828';
+    deleteBtn.textContent = 'Delete Original';
+  }
+  
+  // Re-render timeline to show new cut markers/regions
+  renderMarkers();
+}
+
+
+/* === Cut & Delete Logic === */
+markStartBtn.onclick=()=>{
+  pendingCutStart = mainVideo.currentTime;
+  if (pendingCutEnd !== null && pendingCutEnd < pendingCutStart) {
+    [pendingCutStart, pendingCutEnd] = [pendingCutEnd, pendingCutStart];
+  }
+  updateUI();
+};
+markEndBtn.onclick=()=>{
+  pendingCutEnd = mainVideo.currentTime;
+  if (pendingCutStart !== null && pendingCutEnd < pendingCutStart) {
+    [pendingCutStart, pendingCutEnd] = [pendingCutEnd, pendingCutStart];
+  }
+  updateUI();
+};
+cutSegmentBtn.onclick=()=>{
+  if (pendingCutStart !== null && pendingCutEnd !== null) {
+    currentCuts.push({ start: pendingCutStart, end: pendingCutEnd });
+    pendingCutStart = null;
+    pendingCutEnd = null;
+    updateUI();
+  }
+};
+deleteBtn.onclick=()=>{
+  currentDeleteOriginal = !currentDeleteOriginal;
+  updateUI();
+};
+
+/* === Timeline seeking === */
+function performSeek(newTime, applyRot) {
+  if (mainVideo.duration === 0) return;
+  seekOverlay.style.display = 'block'; // Show black overlay to mask glitch
+  if (applyRot !== undefined) {
+    applyRotationToViewer(applyRot);
+  }
+  mainVideo.currentTime = newTime;
+}
+
+mainVideo.addEventListener('seeked', () => {
+  seekOverlay.style.display = 'none'; // Hide overlay once seek is complete
+});
+
+function stepFrame(dir) {
+  if (!mainVideo.duration) return;
+  const newTime = mainVideo.currentTime + (frameOffset * dir);
+  const clampedTime = Math.max(0, Math.min(mainVideo.duration, newTime));
+
+  // Get rotation for the TARGET time and apply it BEFORE the seek.
+  const rot = getRotationAt(clampedTime);
+  performSeek(clampedTime, rot);
+}
+frameBackBtn.onclick = () => stepFrame(-1);
+frameForwardBtn.onclick = () => stepFrame(1);
+
+function scrubToPosition(clientX){
+ const r=timeline.getBoundingClientRect();
+ let p=(clientX-r.left)/r.width;
+ p=Math.max(0,Math.min(1,p)); // Clamp between 0 and 1
+ const newTime = p * mainVideo.duration;
+
+  // Apply rotation proactively for the destination frame/time
+  const rot = getRotationAt(newTime);
+  performSeek(newTime, rot);
+
+  progress.style.width=(p*100)+'%';
+  scrubber.style.left=(p*100)+'%';
+}
+timeline.onmousedown=e=>{
+ scrubbingMouseDown=true;
+ scrubToPosition(e.clientX);
+};
+window.onmousemove=e=>{
+ if(scrubbingMouseDown)scrubToPosition(e.clientX);
+};
+window.onmouseup=()=>{scrubbingMouseDown=false;};
+
+/* === Commit handling === */
+function commit(dir){
+ saveCurrentState(); // Save before any action
+ const v=currentVideo();if(!v)return;
+ // A video is considered "processed" if it has markers OR any defined cuts.
+ if((v.markers && v.markers.length > 0) || (currentCuts && currentCuts.length > 0)){
+    processedSet.add(v.name);
+ }
+ saveState();
+ renderVideoList();
+ if(dir)goToIndex(currentIndex+dir);
+ else updateFileInfo(); // Re-render to show underline
+}
+commitPrev.onclick=()=>commit(-1);
+commitNextAlt.onclick=()=>commit(1);
+commitCurrentBtn.onclick=()=>commit(0);
+clearProcessedBtn.onclick=()=>{
+  if (confirm('Are you sure you want to clear all committed videos and their settings?')) {
+    processedSet.clear();
+    fileStates.clear(); // Also clear all stored settings
+    saveState();
+    renderVideoList();
+    if(currentVideo()) selectVideo(currentIndex); // Refresh current video view
+  }
+};
+removeCurrentProcessedBtn.onclick=()=>{
+  const v=currentVideo();
+  if(v){
+    processedSet.delete(v.name);
+    fileStates.delete(v.name); // Also clear this video's settings
+    saveState();
+    renderVideoList();
+    selectVideo(currentIndex); // Refresh to show cleared state
+  }
+};
+
+/* === FFmpeg helpers === */
+async function ensureMetadataFor(name,v){
+ const s=fileStates.get(name)||{};
+ if(s.width&&s.height&&s.duration)return s;
+ return new Promise(res=>{
+  const tmp=document.createElement('video');tmp.preload='metadata';tmp.src=v.url;
+  tmp.onloadedmetadata=()=>{s.width=tmp.videoWidth;s.height=tmp.videoHeight;s.duration=tmp.duration;
+    fileStates.set(name,s);tmp.src='';res(s);}
+  tmp.onerror=()=>{tmp.src='';res(null);}
+ });
+}
+
+/* === .BAT generation (Definitive, Timeline-based) === */
+
+/* === .BAT generation (Definitive, Timeline-based, Simplified Paths) === */
+async function generateBat() {
+  if (!processedSet.size) {
+    alert('No committed videos to export.');
+    return;
+  }
+  generateBtn.disabled = true;
+  generateBtn.textContent = 'Building .bat...';
+
+  const bat = [];
+  bat.push('@echo off');
+  bat.push('REM Generated by Rotation Marker Tool — Simplified Flat Directory');
+  bat.push('cd /d "%~dp0"');
+  bat.push('');
+
+  const deletions = [];
+  const tempFilePatterns = new Set(); // To track cleanup patterns
+
+  for (const name of processedSet) {
+    const v = videos.find(x => x.name === name);
+    if (!v) { bat.push(`echo Skipping ${name} (not found)`); continue; }
+    const meta = await ensureMetadataFor(name, v);
+    if (!meta) { bat.push(`echo Skipping ${name} (metadata missing)`); continue; }
+    const state = fileStates.get(name) || {};
+
+    const ow = meta.width || 1080;
+    const oh = meta.height || 1920;
+    const targetWidth = oh;
+    const targetHeight = ow;
+    const base = name.substring(0, name.lastIndexOf('.')) || name;
+    const safeBase = base.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    // Add patterns for cleanup
+    tempFilePatterns.add(`${safeBase}_seg*.mp4`);
+    tempFilePatterns.add(`${safeBase}_list.txt`);
+    tempFilePatterns.add(`${safeBase}_concatenated.mp4`);
+
+    bat.push(`REM === Processing: ${name} ===`);
+    bat.push(`echo "Processing '${name}' ..."`);
+    const cuts = (state.cuts || []).sort((a, b) => a.start - b.start);
+
+    const markers = (state.markers || []).slice().sort((a, b) => {
+      const af = (typeof a.frame === 'number') ? a.frame : (a.time ? timeToFrame(a.time) : 0);
+      const bf = (typeof b.frame === 'number') ? b.frame : (b.time ? timeToFrame(b.time) : 0);
+      return af - bf;
+    });
+
+    const timelinePoints = new Set([0, meta.duration]);
+    markers.forEach(m => {
+      const t = (typeof m.frame === 'number') ? frameToTime(m.frame) : (typeof m.time === 'number' ? m.time : 0);
+      timelinePoints.add(t);
+    });
+    cuts.forEach(c => { timelinePoints.add(c.start); timelinePoints.add(c.end); });
+    const sortedPoints = Array.from(timelinePoints).sort((a, b) => a - b);
+
+    const segments = [];
+    for (let i = 0; i < sortedPoints.length - 1; i++) {
+      const start = sortedPoints[i];
+      const end = sortedPoints[i + 1];
+      if (end - start < 0.001) continue;
+      segments.push({ start, end });
+    }
+
+    segments.forEach(seg => {
+      const midPoint = (seg.start + seg.end) / 2;
+      seg.isCut = cuts.some(cut => midPoint >= cut.start && midPoint < cut.end);
+      seg.rotation = 0;
+      markers.forEach(m => {
+        const markerTime = (typeof m.frame === 'number') ? frameToTime(m.frame) : (typeof m.time === 'number' ? m.time : 0);
+        if (seg.start >= markerTime) { seg.rotation = m.rotation; }
+      });
+    });
+
+    const keepSegments = segments.filter(seg => !seg.isCut);
+    if (keepSegments.length === 0) {
+      bat.push(`echo "Skipping ${name} as all content has been cut."`);
+      bat.push('');
+      continue;
+    }
+
+    const tempFiles = [];
+    let segmentIndex = 0;
+    for (const seg of keepSegments) {
+      const out = `${safeBase}_seg${String(segmentIndex++).padStart(3, '0')}.mp4`;
+      tempFiles.push(out);
+
+      const transpose = seg.rotation === 90 ? "transpose=1," : seg.rotation === 270 ? "transpose=2," : seg.rotation === 180 ? "transpose=1,transpose=1," : "";
+      const vf = `${transpose}scale=-1:${targetHeight},pad=${targetWidth}:${targetHeight}:(ow-iw)/2:(oh-ih)/2`;
+      const duration = (seg.end - seg.start).toFixed(3);
+
+      bat.push(`echo "  Segment ${segmentIndex - 1}: ${fmtTime(seg.start)}–${fmtTime(seg.end)} rot=${seg.rotation}°"`);
+      bat.push(`ffmpeg -y -i "${name}" -ss ${seg.start.toFixed(3)} -t ${duration} -vf "${vf}" -c:v libx264 -crf 17 -preset veryslow -c:a copy -avoid_negative_ts make_zero -movflags +faststart "${out}"`);
+    }
+
+    const listFile = `${safeBase}_list.txt`;
+    const finalFileWithSpaces = `${base}.mp4`;
+    const finalFileSafe = `${safeBase}_concatenated.mp4`;
+
+    bat.push(`del "${listFile}" 2>nul`);
+    for (const f of tempFiles) {
+      bat.push(`(echo file '${f}') >> "${listFile}"`);
+    }
+
+    bat.push(`echo "  Concatenating segments -> ${finalFileWithSpaces}"`);
+    bat.push(`ffmpeg -y -f concat -safe 0 -i "${listFile}" -c copy "${finalFileSafe}"`);
+
+    bat.push(`del "${finalFileWithSpaces}" 2>nul`);
+    bat.push(`ren "${finalFileSafe}" "${base}.mp4"`);
+    bat.push('');
+
+    if (state.deleteOriginal) {
+      deletions.push(name);
+    }
+  }
+
+  bat.push('echo "--- Final Cleanup ---"');
+  bat.push('echo "Removing temporary segment files..."');
+  for (const pattern of tempFilePatterns) {
+      bat.push(`del "${pattern}" /q 2>nul`);
+  }
+  bat.push('');
+
+
+  if (deletions.length > 0) {
+    bat.push('echo "--- Deleting Original Files as Requested ---"');
+    for (const name of deletions) {
+      bat.push(`echo "  Deleting '${name}'..."`);
+      bat.push(`del "${name}"`);
+    }
+    bat.push('');
+  }
+
+  bat.push('echo All done.');
+  bat.push('pause');
+
+  const blob = new Blob([bat.join('\r\n')], { type: 'text/plain' });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'process_videos.bat';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+
+  generateBtn.disabled = false;
+  generateBtn.textContent = 'Generate .bat';
+  alert('Downloaded process_videos.bat — run it beside your videos.');
+}
+generateBtn.addEventListener('click', generateBat);
+
+/* === End of Script === */
+</script>
+</body>
+</html>

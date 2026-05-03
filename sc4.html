@@ -162,7 +162,7 @@
         .row-action-group-left {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
         .row-action-group-right {
             display: flex;
@@ -320,18 +320,18 @@
             font-weight: bold;
             margin-top: 20px;
             margin-bottom: 0;
-            padding: 5px 20px;
+            padding: 4px 20px;
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
         .date-info {
             display: none;
             font-size: 0.8em;
             font-weight: normal;
             color: var(--date-text-color);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         .main-container.show-dates .date-info {
             display: block;
@@ -342,12 +342,12 @@
         .checkbox-container {
             display: flex;
             align-items: center;
-            margin-left: 15px;
+            margin-left: 16px;
             color: white;
             font-size: 14px;
         }
         .checkbox-container input {
-            margin-right: 5px;
+            margin-right: 4px;
         }
         .row-number {
             font-size: 1.5em;
@@ -438,10 +438,10 @@
             color: white;
             border: none;
             cursor: pointer;
-            padding: 5px 10px;
+            padding: 4px 10px;
             font-size: 18px;
             border-radius: 4px;
-            margin: 0 5px;
+            margin: 0 4px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -460,10 +460,47 @@
             background-color: var(--toolbar-color);
             color: white;
             border: 1px solid #444444;
-            padding: 0 5px;
+            padding: 0 4px;
             margin-left: 10px;
             text-align: center;
         }
+
+        /* Editor Overlay Styles */
+        #editor-modal .modal-content {
+            background-color: #121212;
+            color: #eee;
+            width: 95%;
+            max-width: 1200px;
+            padding: 18px;
+            border-radius: 8px;
+        }
+        .editor-app { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        #editor-fileInfo { font-size: 14px; color: #ddd; }
+        #editor-playerRow { display: flex; align-items: center; gap: 12px; width: 100%; justify-content: center; }
+        .editor-navBtn { background: #222; border: 2px solid #333; color: #fff; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 18px; }
+        #editor-playerWrap { display: flex; flex-direction: column; align-items: center; width: 100%; }
+        #editor-videoContainer { width: 100%; display: flex; align-items: center; justify-content: center; min-height: 260px; position: relative; }
+        #editor-videoOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); pointer-events: none; display: none; z-index: 10; }
+        #editor-mainVideo { max-width: 90%; max-height: 60vh; background: black; border-radius: 6px; object-fit: contain; }
+        #editor-timelineWrap { width: 98%; position: relative; user-select: none; margin-top: 10px; }
+        #editor-timeline { height: 18px; background: #333; border-radius: 9px; position: relative; cursor: pointer; margin-bottom: 36px; }
+        #editor-scrubber { position: absolute; top: 50%; left: 0; width: 22px; height: 22px; background: #fff; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+        #editor-progress { position: absolute; left: 0; top: 0; height: 100%; background: #00acc1; border-radius: 9px; width: 0%; }
+        .editor-marker { position: absolute; top: 0; width: 6px; height: 18px; transform: translateX(-50%); border-radius: 3px; box-shadow: 0 0 4px rgba(0,0,0,.6); }
+        .editor-marker[data-rot="270"] { background: #00e5ff; }
+        .editor-marker[data-rot="180"] { background: #ffca28; }
+        .editor-marker[data-rot="90"] { background: #ff4081; }
+        .editor-cut-region { position: absolute; top: 0; height: 100%; background: rgba(255, 82, 82, 0.5); pointer-events: none; }
+        .editor-pending-marker { position: absolute; top: -4px; width: 4px; height: 26px; transform: translateX(-50%); border-radius: 2px; background: #ff5252; }
+        .editor-delete-x { position: absolute; top: 20px; transform: translateX(-50%); font-size: 12px; cursor: pointer; color: #ccc; }
+        .editor-delete-x:hover { color: #f44336; }
+        #editor-controls { display: flex; gap: 8px; align-items: center; width: 98%; margin-top: 8px; justify-content: space-between; }
+        .editor-control-group { display: flex; gap: 8px; justify-content: center; flex: 1; }
+        .editor-frame-btn { background: #333; border: 1px solid #444; font-size: 16px; padding: 4px 10px; color: white; cursor: pointer; }
+        #editor-cutsListContainer { width: 98%; margin-top: 10px; background: #2a2a2a; border-radius: 6px; padding: 8px; max-height: 120px; overflow-y: auto; }
+        .editor-cut-item { display: flex; justify-content: space-between; align-items: center; padding: 4px; border-bottom: 1px solid #333; color: #eee; }
+        .editor-delete-cut-btn { cursor: pointer; color: #ff5252; font-weight: bold; }
+        .editor-greenBtn { background: #43a047; border: 2px solid #2e7d32; color: #fff; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -583,8 +620,53 @@
 
     <div id="video-modal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 90%; max-height: 90%; padding: 0; background: black; position: relative; display: flex; align-items: center; justify-content: center;">
-            <span class="close" id="close-video-modal" style="position: absolute; right: 10px; top: 5px; color: white; z-index: 3000;">&times;</span>
+            <span class="close" id="close-video-modal" style="position: absolute; right: 10px; top: 4px; color: white; z-index: 3000;">&times;</span>
             <video id="player" controls style="max-width: 100%; max-height: 100%; display: block; object-fit: contain;"></video>
+        </div>
+    </div>
+
+    <div id="editor-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-editor-modal">&times;</span>
+            <div class="editor-app">
+                <div id="editor-fileInfo">No file selected</div>
+                <div id="editor-playerWrap">
+                    <div id="editor-videoContainer">
+                        <div id="editor-videoOverlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); pointer-events: none; display: none; z-index: 10;"></div>
+                        <video id="editor-mainVideo" controls muted preload="metadata"></video>
+                    </div>
+                    <div id="editor-timelineWrap">
+                        <div id="editor-timeline">
+                            <div id="editor-progress"></div>
+                            <div id="editor-scrubber"></div>
+                        </div>
+                    </div>
+                    <div id="editor-frameControls" class="editor-control-group" style="margin-bottom: 8px;">
+                        <button id="editor-frameBackBtn" class="editor-frame-btn">←</button>
+                        <button id="editor-frameForwardBtn" class="editor-frame-btn">→</button>
+                    </div>
+                    <div id="editor-controls">
+                        <div class="editor-control-group" style="justify-content:flex-start">
+                            <button id="editor-playPause" class="bar-button">▶️ Play</button>
+                        </div>
+                        <div class="editor-control-group">
+                            <button id="editor-markStartBtn" class="bar-button" style="border-color:#43a047">Mark Start</button>
+                            <button id="editor-rotLeft" class="bar-button" style="border-color:#00e5ff">90° Left</button>
+                            <button id="editor-rot180" class="bar-button" style="border-color:#ffca28">180°</button>
+                            <button id="editor-rotRight" class="bar-button" style="border-color:#ff4081">90° Right</button>
+                            <button id="editor-markEndBtn" class="bar-button" style="border-color:#43a047">Mark End</button>
+                            <button id="editor-cutSegmentBtn" class="bar-button" style="background:#d32f2f;color:white" disabled>Cut Segment</button>
+                        </div>
+                        <div class="editor-control-group" style="justify-content:flex-end">
+                            <span id="editor-timeDisplay" style="font-size: 12px; color: #888;">00:00.000 / 00:00.000</span>
+                        </div>
+                    </div>
+                    <div id="editor-cutsListContainer"></div>
+                    <div style="width:98%; display:flex; justify-content: flex-end; margin-top: 10px;">
+                        <button id="editor-commitBtn" class="editor-greenBtn">Commit</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -633,6 +715,27 @@
         const videoModal = document.getElementById('video-modal');
         const player = document.getElementById('player');
         const closeVideoModal = document.getElementById('close-video-modal');
+        const editorModal = document.getElementById('editor-modal');
+        const closeEditorModal = document.getElementById('close-editor-modal');
+        const editorMainVideo = document.getElementById('editor-mainVideo');
+        const editorTimeline = document.getElementById('editor-timeline');
+        const editorProgress = document.getElementById('editor-progress');
+        const editorScrubber = document.getElementById('editor-scrubber');
+        const editorPlayPauseBtn = document.getElementById('editor-playPause');
+        const editorTimeDisplay = document.getElementById('editor-timeDisplay');
+        const editorMarkStartBtn = document.getElementById('editor-markStartBtn');
+        const editorMarkEndBtn = document.getElementById('editor-markEndBtn');
+        const editorCutSegmentBtn = document.getElementById('editor-cutSegmentBtn');
+        const editorCutsListContainer = document.getElementById('editor-cutsListContainer');
+        const editorCommitBtn = document.getElementById('editor-commitBtn');
+        const editorFrameBackBtn = document.getElementById('editor-frameBackBtn');
+        const editorFrameForwardBtn = document.getElementById('editor-frameForwardBtn');
+        const editorRotLeftBtn = document.getElementById('editor-rotLeft');
+        const editorRot180Btn = document.getElementById('editor-rot180');
+        const editorRotRightBtn = document.getElementById('editor-rotRight');
+        const editorVideoOverlay = document.getElementById('editor-videoOverlay');
+        const editorFileInfo = document.getElementById('editor-fileInfo');
+
         const prevCanvasBtn = document.getElementById('prev-canvas-btn');
         const nextCanvasBtn = document.getElementById('next-canvas-btn');
         const loadMenuBtn = document.getElementById('load-menu-btn');
@@ -660,6 +763,18 @@
         let originalPlaylistShortcuts = [];
         let playlistCreationTime = null;
         let currentVideoUrl = null;
+        let editorCurrentVideo = null;
+        let editorCurrentCuts = [];
+        let editorPendingCutStart = null;
+        let editorPendingCutEnd = null;
+        let editorMarkers = [];
+        let editorEstimatedFPS = 30;
+        let editorFrameOffset = 1 / 30;
+        let editorMediaStartTime = null;
+        let editorMediaFrameCount = 0;
+        let editorScrubbingMouseDown = false;
+        let editorCurrentAppliedRotation = 0;
+
         const mainContainer = document.querySelector('.main-container');
         const showDatesCheckbox = document.getElementById('show-dates-checkbox');
         const showNumbersCheckbox = document.getElementById('show-numbers-checkbox');
@@ -682,7 +797,300 @@
             }
         }
 
+        // Editor Helper Functions
+        function editorTimeToFrame(time) {
+            return Math.round(time * editorEstimatedFPS);
+        }
+        function editorFrameToTime(frame) {
+            return frame / editorEstimatedFPS;
+        }
+        function editorFmtTime(s) {
+            if (!isFinite(s)) s = 0;
+            const ms = Math.floor((s - Math.floor(s)) * 1000);
+            const m = Math.floor(s / 60); const sec = Math.floor(s % 60);
+            return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
+        }
+        function editorApplyRotationToViewer(d) {
+            editorCurrentAppliedRotation = (d + 360) % 360;
+            editorMainVideo.style.transform = `rotate(${editorCurrentAppliedRotation}deg) translate3d(0,0,0)`;
+        }
+        function editorGetRotationAt(time) {
+            if (!editorMarkers || !editorMarkers.length) return 0;
+            const currentFrame = editorTimeToFrame(time);
+            let rot = 0;
+            for (const m of editorMarkers) {
+                if (currentFrame >= m.frame) {
+                    rot = m.rotation;
+                } else {
+                    break;
+                }
+            }
+            return rot;
+        }
+        function editorRenderMarkers() {
+            editorTimeline.querySelectorAll('.editor-marker, .editor-delete-x, .editor-cut-region, .editor-pending-marker').forEach(x => x.remove());
+            if (!editorMainVideo.duration) return;
+            const w = editorTimeline.clientWidth;
+
+            editorCurrentCuts.forEach(cut => {
+                const startX = (cut.start / editorMainVideo.duration) * w;
+                const endX = (cut.end / editorMainVideo.duration) * w;
+                const region = document.createElement('div');
+                region.className = 'editor-cut-region';
+                region.style.left = `${startX}px`;
+                region.style.width = `${endX - startX}px`;
+                editorTimeline.appendChild(region);
+            });
+
+            if (editorPendingCutStart !== null) {
+                const x = (editorPendingCutStart / editorMainVideo.duration) * w;
+                const marker = document.createElement('div');
+                marker.className = 'editor-pending-marker';
+                marker.style.left = `${x}px`;
+                editorTimeline.appendChild(marker);
+            }
+            if (editorPendingCutEnd !== null) {
+                const x = (editorPendingCutEnd / editorMainVideo.duration) * w;
+                const marker = document.createElement('div');
+                marker.className = 'editor-pending-marker';
+                marker.style.left = `${x}px`;
+                editorTimeline.appendChild(marker);
+            }
+
+            (editorMarkers || []).forEach((m, idx) => {
+                const t = editorFrameToTime(m.frame);
+                const x = (t / editorMainVideo.duration) * w;
+                const mark = document.createElement('div');
+                mark.className = 'editor-marker';
+                mark.dataset.rot = m.rotation;
+                mark.style.left = x + 'px';
+                mark.onclick = (e) => {
+                    e.stopPropagation();
+                    editorMainVideo.currentTime = t;
+                    editorApplyRotationToViewer(m.rotation);
+                };
+                editorTimeline.appendChild(mark);
+
+                const del = document.createElement('div');
+                del.className = 'editor-delete-x';
+                del.style.left = x + 'px';
+                del.textContent = '❌';
+                del.onclick = e => {
+                    e.stopPropagation();
+                    editorMarkers.splice(idx, 1);
+                    editorRenderMarkers();
+                };
+                editorTimeline.appendChild(del);
+            });
+        }
+        function editorRenderLoop(now, metadata) {
+            if (!editorMainVideo.duration) return;
+            const currentTime = metadata.mediaTime;
+            if (!editorMainVideo.paused && editorMediaStartTime === null) {
+                editorMediaStartTime = currentTime;
+                editorMediaFrameCount = 1;
+            } else if (!editorMainVideo.paused) {
+                editorMediaFrameCount++;
+            }
+            if (editorMediaStartTime !== null && currentTime - editorMediaStartTime >= 2) {
+                editorEstimatedFPS = editorMediaFrameCount / (currentTime - editorMediaStartTime);
+                editorFrameOffset = 1 / editorEstimatedFPS;
+                editorMediaStartTime = null;
+                editorMediaFrameCount = 0;
+            }
+            if (!editorScrubbingMouseDown) {
+                const p = (currentTime / editorMainVideo.duration) * 100;
+                editorProgress.style.width = p + '%';
+                editorScrubber.style.left = p + '%';
+            }
+            editorTimeDisplay.textContent = `${editorFmtTime(currentTime)} / ${editorFmtTime(editorMainVideo.duration)}`;
+            const rot = editorGetRotationAt(currentTime);
+            editorApplyRotationToViewer(rot);
+            const isCut = editorCurrentCuts.some(cut => currentTime >= cut.start && currentTime < cut.end);
+            editorVideoOverlay.style.display = isCut ? 'block' : 'none';
+            editorMainVideo.requestVideoFrameCallback(editorRenderLoop);
+        }
+        function editorRenderCutsList() {
+            editorCutsListContainer.innerHTML = '';
+            if (editorCurrentCuts.length === 0) {
+                editorCutsListContainer.innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">No cuts defined.</div>';
+                return;
+            }
+            editorCurrentCuts.sort((a,b) => a.start - b.start).forEach((cut, index) => {
+                const item = document.createElement('div');
+                item.className = 'editor-cut-item';
+                item.innerHTML = `<span>Cut ${index + 1}: ${editorFmtTime(cut.start)} – ${editorFmtTime(cut.end)}</span><span class="editor-delete-cut-btn">❌</span>`;
+                item.querySelector('.editor-delete-cut-btn').onclick = () => {
+                    editorCurrentCuts.splice(index, 1);
+                    editorUpdateUI();
+                };
+                editorCutsListContainer.appendChild(item);
+            });
+        }
+        function editorUpdateUI() {
+            editorRenderCutsList();
+            editorCutSegmentBtn.disabled = !(editorPendingCutStart !== null && editorPendingCutEnd !== null);
+            editorRenderMarkers();
+        }
+        function editorScrubToPosition(clientX) {
+            const r = editorTimeline.getBoundingClientRect();
+            let p = (clientX - r.left) / r.width;
+            p = Math.max(0, Math.min(1, p));
+            const newTime = p * editorMainVideo.duration;
+            editorMainVideo.currentTime = newTime;
+            editorProgress.style.width = (p * 100) + '%';
+            editorScrubber.style.left = (p * 100) + '%';
+        }
+
+        async function openVideoEditor(videoName, projectPath, subfolder) {
+            const key = projectPath + '|' + videoName;
+            editorCurrentVideo = { videoName, projectPath, subfolder };
+            editorFileInfo.textContent = `${videoName} (${projectPath})`;
+
+            const selection = shortcutSelections.get(key) || {};
+            editorCurrentCuts = selection.cuts ? JSON.parse(JSON.stringify(selection.cuts)) : [];
+            editorMarkers = selection.markers ? JSON.parse(JSON.stringify(selection.markers)) : [];
+            if (editorMarkers.length === 0 && selection.rotation && selection.rotation !== "0") {
+                editorMarkers = [{ frame: 0, rotation: parseInt(selection.rotation) }];
+            }
+            editorPendingCutStart = null;
+            editorPendingCutEnd = null;
+            editorEstimatedFPS = 30;
+            editorFrameOffset = 1 / 30;
+            editorMediaStartTime = null;
+            editorMediaFrameCount = 0;
+
+            // Find video file
+            let videoFile = null;
+            const project = allProjectFolders.find(p => p.path === projectPath);
+            if (project) {
+                async function scanForFile(dirHandle, sub) {
+                    for await (const entry of dirHandle.values()) {
+                        if (entry.kind === 'file' && entry.name === videoName) {
+                            return await entry.getFile();
+                        } else if (entry.kind === 'directory' && !skipDirs.has(entry.name.toLowerCase())) {
+                            const res = await scanForFile(entry, sub);
+                            if (res) return res;
+                        }
+                    }
+                    return null;
+                }
+                videoFile = await scanForFile(project.handle, subfolder);
+            }
+
+            if (!videoFile) {
+                alert('Could not find video file.');
+                return;
+            }
+
+            if (currentVideoUrl) URL.revokeObjectURL(currentVideoUrl);
+            currentVideoUrl = URL.createObjectURL(videoFile);
+            editorMainVideo.src = currentVideoUrl;
+            editorModal.style.display = 'flex';
+        }
+
         function init() {
+            closeEditorModal.addEventListener('click', () => {
+                editorModal.style.display = 'none';
+                editorMainVideo.pause();
+                editorMainVideo.src = '';
+            });
+
+            editorPlayPauseBtn.addEventListener('click', () => {
+                if (editorMainVideo.paused) {
+                    editorMainVideo.play();
+                    editorPlayPauseBtn.textContent = '⏸ Pause';
+                } else {
+                    editorMainVideo.pause();
+                    editorPlayPauseBtn.textContent = '▶️ Play';
+                }
+            });
+
+            editorMarkStartBtn.onclick = () => {
+                editorPendingCutStart = editorMainVideo.currentTime;
+                if (editorPendingCutEnd !== null && editorPendingCutEnd < editorPendingCutStart) {
+                    [editorPendingCutStart, editorPendingCutEnd] = [editorPendingCutEnd, editorPendingCutStart];
+                }
+                editorUpdateUI();
+            };
+            editorMarkEndBtn.onclick = () => {
+                editorPendingCutEnd = editorMainVideo.currentTime;
+                if (editorPendingCutStart !== null && editorPendingCutEnd < editorPendingCutStart) {
+                    [editorPendingCutStart, editorPendingCutEnd] = [editorPendingCutEnd, editorPendingCutStart];
+                }
+                editorUpdateUI();
+            };
+            editorCutSegmentBtn.onclick = () => {
+                if (editorPendingCutStart !== null && editorPendingCutEnd !== null) {
+                    editorCurrentCuts.push({ start: editorPendingCutStart, end: editorPendingCutEnd });
+                    editorPendingCutStart = null;
+                    editorPendingCutEnd = null;
+                    editorUpdateUI();
+                }
+            };
+
+            editorFrameBackBtn.onclick = () => editorMainVideo.currentTime -= editorFrameOffset;
+            editorFrameForwardBtn.onclick = () => editorMainVideo.currentTime += editorFrameOffset;
+
+            [editorRotLeftBtn, editorRot180Btn, editorRotRightBtn].forEach(b => {
+                b.onclick = () => {
+                    const d = b.id === 'editor-rotLeft' ? 270 : b.id === 'editor-rot180' ? 180 : 90;
+                    const nr = (editorCurrentAppliedRotation + d) % 360;
+                    editorApplyRotationToViewer(nr);
+                    const currentFrame = editorTimeToFrame(editorMainVideo.currentTime);
+                    editorMarkers.push({ frame: currentFrame, rotation: nr });
+                    editorMarkers.sort((a, b) => a.frame - b.frame);
+                    editorRenderMarkers();
+                };
+            });
+
+            editorTimeline.onmousedown = e => {
+                editorScrubbingMouseDown = true;
+                editorScrubToPosition(e.clientX);
+            };
+            window.addEventListener('mousemove', e => {
+                if (editorScrubbingMouseDown) editorScrubToPosition(e.clientX);
+            });
+            window.addEventListener('mouseup', () => {
+                editorScrubbingMouseDown = false;
+            });
+
+            editorMainVideo.onloadedmetadata = () => {
+                editorUpdateUI();
+                editorMainVideo.requestVideoFrameCallback(editorRenderLoop);
+            };
+
+            editorCommitBtn.onclick = () => {
+                const key = editorCurrentVideo.projectPath + '|' + editorCurrentVideo.videoName;
+                let selection = shortcutSelections.get(key);
+                if (!selection) {
+                    selection = {
+                        videoName: editorCurrentVideo.videoName,
+                        projectPath: editorCurrentVideo.projectPath,
+                        subfolder: editorCurrentVideo.subfolder,
+                        type: '', rotation: "0"
+                    };
+                    shortcutSelections.set(key, selection);
+                }
+                selection.cuts = JSON.parse(JSON.stringify(editorCurrentCuts));
+                selection.markers = JSON.parse(JSON.stringify(editorMarkers));
+                if (editorMarkers.length > 0) {
+                    selection.rotation = editorMarkers[editorMarkers.length - 1].rotation.toString();
+                }
+                selection.fps = editorEstimatedFPS;
+
+                // Close editor
+                editorModal.style.display = 'none';
+                editorMainVideo.pause();
+                editorMainVideo.src = '';
+
+                // Update UI in main view
+                const row = document.querySelector(`.landscape-row[data-video-name="${editorCurrentVideo.videoName}"][data-project-path="${editorCurrentVideo.projectPath}"]`);
+                if (row) {
+                    updateRowUI(row, editorCurrentVideo.videoName, editorCurrentVideo.projectPath);
+                }
+            };
+
             loadMenuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 optionsDropdown.style.display = 'none';
@@ -1229,6 +1637,7 @@
                 updateRowUI(rowDiv, videoName, projectPath);
             };
 
+            leftGroup.appendChild(createDeleteCross(videoName, projectPath, subfolder, rowDiv));
             leftGroup.appendChild(createBtn('Rotate Left', () => rotate(-90)));
             leftGroup.appendChild(createBtn('Rotate Right', () => rotate(90)));
             leftGroup.appendChild(createBtn('Both', () => setType('both-sc'), 'both-sc', '--both-sc-color'));
@@ -1283,13 +1692,21 @@
 
             leftGroup.appendChild(moveSelect);
 
+            const editBtn = document.createElement('button');
+            editBtn.className = 'bar-button row-bar-btn';
+            editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>';
+            editBtn.title = 'Edit video';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                openVideoEditor(videoName, projectPath, subfolder);
+            };
+            leftGroup.appendChild(editBtn);
+
             bar.appendChild(leftGroup);
 
             const rightGroup = document.createElement('div');
             rightGroup.className = 'row-action-group-right';
             
-            rightGroup.appendChild(createDeleteCross(videoName, projectPath, subfolder, rowDiv));
-
             const nameSpan = document.createElement('span');
             nameSpan.className = 'row-video-name';
             nameSpan.textContent = videoName;
@@ -1387,16 +1804,20 @@
         function layoutLandscapeThumbnails() {
             const scale = parseFloat(sizeSelector.value);
             const elements = document.querySelectorAll('.landscape-row, .project-header, hr');
+            const showNumbers = showNumbersCheckbox.checked;
+            const paddingLeft = showNumbers ? 40 : 20;
 
             elements.forEach(element => {
                 if (element.classList.contains('landscape-row')) {
                     const wrappers = element.querySelectorAll('.thumbnail-wrapper');
+                    let sampleOriginalHeight = 180;
                     wrappers.forEach(wrapper => {
                         const thumb = wrapper.querySelector('.thumbnail');
                         if (!thumb.dataset.originalWidth) return;
                         
                         const originalWidth = parseFloat(thumb.dataset.originalWidth);
                         const originalHeight = parseFloat(thumb.dataset.originalHeight);
+                        sampleOriginalHeight = originalHeight;
                         const scaledWidth = originalWidth * scale;
                         const scaledHeight = originalHeight * scale;
                         
@@ -1413,6 +1834,12 @@
                         thumb.style.width = scaledWidth + 'px';
                         thumb.style.height = scaledHeight + 'px';
                     });
+
+                    const bar = element.querySelector('.row-action-bar');
+                    if (bar) {
+                        const targetWidth = paddingLeft + (6 * (sampleOriginalHeight * scale)) + (5 * 10) + 20;
+                        bar.style.maxWidth = targetWidth + 'px';
+                    }
                 }
             });
             updateRowNumbers();
@@ -1424,8 +1851,12 @@
             return str.replace(/'/g, "''");
         }
 
-        function generateShortcutScript() {
+                function generateShortcutScript() {
             const selectionsToProcess = Array.from(shortcutSelections.values());
+
+            // Check if any selections have editor changes (cuts or complex markers)
+            const hasEditorChanges = selectionsToProcess.some(sel => (sel.cuts && sel.cuts.length > 0) || (sel.markers && sel.markers.length > 1));
+
             const displayedProjectPaths = new Set(Array.from(canvases.values()).map(c => c.path));
             const selectedProjectPaths = new Set();
             selectionsToProcess.forEach(s => {
@@ -1442,31 +1873,150 @@
             const dummyTimestampProjects = new Set([...displayedProjectPaths].filter(p => !selectedProjectPaths.has(p)));
 
             let scriptLines = [
-                '\$PSScriptRoot = Split-Path -Parent -Path \$MyInvocation.MyCommand.Definition',
-                '\$wshell = New-Object -ComObject WScript.Shell',
+                "$wshell = New-Object -ComObject WScript.Shell",
+                "",
+                "function Process-Video {",
+                "    param([string]$sourcePath, [string]$targetPath, [Object[]]$markers, [Object[]]$cuts)",
+                "    ",
+                "    $tempDir = Join-Path -Path $env:TEMP -ChildPath ([Guid]::NewGuid().ToString())",
+                "    if (-not (Test-Path -LiteralPath \"$tempDir\")) { New-Item -ItemType Directory -Path \"$tempDir\" -Force | Out-Null }",
+                "    ",
+                "    $duration = (ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 \"$sourcePath\")",
+                "    $totalDuration = [double]$duration",
+                "    ",
+                "    $points = New-Object System.Collections.Generic.List[double]",
+                "    $points.Add(0.0)",
+                "    $points.Add($totalDuration)",
+                "    foreach ($m in $markers) { $points.Add($m.time) }",
+                "    foreach ($c in $cuts) { $points.Add($c.start); $points.Add($c.end) }",
+                "    ",
+                "    $sortedPoints = $points | Sort-Object | Select-Object -Unique",
+                "    ",
+                "    $segments = @()",
+                "    $maxW = 0",
+                "    $maxH = 0",
+                "    ",
+                "    # Probe for initial dimensions",
+                "    $metadata = (ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 \"$sourcePath\") -split \"x\"",
+                "    $sw = [int]$metadata[0]",
+                "    $sh = [int]$metadata[1]",
+                "    ",
+                "    for ($i = 0; $i -lt $sortedPoints.Count - 1; $i++) {",
+                "        $start = $sortedPoints[$i]",
+                "        $end = $sortedPoints[$i+1]",
+                "        if ($end - $start -lt 0.001) { continue }",
+                "        ",
+                "        $mid = ($start + $end) / 2",
+                "        $isCut = $false",
+                "        foreach ($c in $cuts) { if ($mid -ge $c.start -and $mid -lt $c.end) { $isCut = $true; break } }",
+                "        if ($isCut) { continue }",
+                "        ",
+                "        $rotation = 0",
+                "        foreach ($m in $markers) { if ($start -ge $m.time) { $rotation = $m.rotation } }",
+                "        ",
+                "        $curW = $sw",
+                "        $curH = $sh",
+                "        if ($rotation -eq 90 -or $rotation -eq 270) {",
+                "            $curW = $sh",
+                "            $curH = $sw",
+                "        }",
+                "        if ($curW -gt $maxW) { $maxW = $curW }",
+                "        if ($curH -gt $maxH) { $maxH = $curH }",
+                "        ",
+                "        $segments += @{ start = $start; end = $end; rotation = $rotation }",
+                "    }",
+                "    ",
+                "    if ($segments.Count -eq 0) { Write-Host \"All content cut for $sourcePath\"; return }",
+                "    ",
+                "    # Ensure even dimensions for libx264",
+                "    $maxW = [Math]::Ceiling($maxW / 2) * 2",
+                "    $maxH = [Math]::Ceiling($maxH / 2) * 2",
+                "    ",
+                "    $listPath = Join-Path -Path \"$tempDir\" -ChildPath \"list.txt\"",
+                "    $segIndex = 0",
+                "    foreach ($seg in $segments) {",
+                "        $segFileName = \"seg{0:D3}.mp4\" -f $segIndex++",
+                "        $outSeg = Join-Path -Path \"$tempDir\" -ChildPath $segFileName",
+                "        $transpose = \"\"",
+                "        if ($seg.rotation -eq 90) { $transpose = \"transpose=1,\" }",
+                "        elseif ($seg.rotation -eq 180) { $transpose = \"transpose=1,transpose=1,\" }",
+                "        elseif ($seg.rotation -eq 270) { $transpose = \"transpose=2,\" }",
+                "        ",
+                "        # Scale and pad to match max dimensions to allow concatenation",
+                "        $vf = \"${transpose}scale=(iw*sar)*min(${maxW}/(iw*sar)\\,${maxH}/ih):ih*min(${maxW}/(iw*sar)\\,${maxH}/ih),pad=${maxW}:${maxH}:(${maxW}-iw*min(${maxW}/iw\\,${maxH}/ih))/2:(${maxH}-ih*min(${maxW}/iw\\,${maxH}/ih))/2\"",
+                "        ",
+                "        $dur = $seg.end - $seg.start",
+                "        ffmpeg -y -i \"$sourcePath\" -ss $seg.start -t $dur -vf \"$vf\" -c:v libx264 -crf 17 -preset fast -c:a copy -avoid_negative_ts make_zero \"$outSeg\" 2>$null",
+                "        (echo \"file '$segFileName'\") | Out-File -FilePath \"$listPath\" -Append -Encoding utf8",
+                "    }",
+                "    ",
+                "    ffmpeg -y -f concat -safe 0 -i \"$listPath\" -c copy \"$targetPath\" 2>$null",
+                "    Remove-Item -LiteralPath \"$tempDir\" -Recurse -Force",
+                "}",
                 '',
                 'function Update-RotationData {',
-                '    param([string]\$filePath, [hashtable]\$toAdd, [string[]]\$toRemove)',
-                '    \$data = @{}',
-                '    if (Test-Path -LiteralPath \$filePath) {',
-                '        Get-Content -LiteralPath \$filePath | ForEach-Object {',
-                '            if (\$_ -match "^(.*?):(.*)$") {',
-                '                \$data[\$matches[1]] = \$matches[2]',
+                '    param([string]$filePath, [hashtable]$toAdd, [string[]]$toRemove)',
+                '    $data = @{}',
+                '    if (Test-Path -LiteralPath "$filePath") {',
+                '        Get-Content -LiteralPath "$filePath" | ForEach-Object {',
+                '            if ($_ -match "^(.*?):(.*)$") {',
+                '                $data[$matches[1]] = $matches[2]',
                 '            }',
                 '        }',
                 '    }',
-                '    foreach (\$key in \$toRemove) { \$data.Remove(\$key) }',
-                '    foreach (\$key in \$toAdd.Keys) { \$data[\$key] = \$toAdd[\$key] }',
-                '    if (\$data.Count -eq 0) {',
-                '        if (Test-Path -LiteralPath \$filePath) { Remove-Item -LiteralPath \$filePath }',
+                '    foreach ($key in $toRemove) { $data.Remove($key) }',
+                '    foreach ($key in $toAdd.Keys) { $data[$key] = $toAdd[$key] }',
+                '    if ($data.Count -eq 0) {',
+                '        if (Test-Path -LiteralPath "$filePath") { Remove-Item -LiteralPath "$filePath" }',
                 '    } else {',
-                '        \$content = @()',
-                '        foreach (\$key in \$data.Keys) { \$content += ("{0}:{1}" -f \$key, \$data[\$key]) }',
-                '        \$content | Out-File -FilePath \$filePath -Encoding utf8',
+                '        $content = @()',
+                '        foreach ($key in $data.Keys) { $content += ("{0}:{1}" -f $key, $data[$key]) }',
+                '        $content | Out-File -FilePath "$filePath" -Encoding utf8',
                 '    }',
                 '}',
                 ''
             ];
+
+            scriptLines.unshift("$PSScriptRoot = Split-Path -Parent -Path \"$MyInvocation.MyCommand.Definition\"");
+
+            if (hasEditorChanges) {
+                scriptLines.push('# --- Processing Videos with Editor Changes ---');
+                selectionsToProcess.forEach(sel => {
+                    if ((sel.cuts && sel.cuts.length > 0) || (sel.markers && sel.markers.length > 1)) {
+                        const escapedVideoName = escapePSString(sel.videoName);
+                        const escapedSourceProjectPath = escapePSString(sel.projectPath);
+                        const escapedSubfolder = escapePSString(sel.subfolder);
+
+                        let sourceVideoPathVar = "$PSScriptRoot";
+                        if (escapedSourceProjectPath) sourceVideoPathVar = `(Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedSourceProjectPath}')`;
+                        if (escapedSubfolder) sourceVideoPathVar = `(Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedSubfolder}')`;
+                        scriptLines.push(`$sourcePath = Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedVideoName}'`);
+
+                        scriptLines.push(`$markers = @()`);
+                        if (sel.markers) {
+                            sel.markers.forEach(m => {
+                                const time = m.time !== undefined ? m.time : m.frame / (sel.fps || 30);
+                                scriptLines.push(`$markers += @{ time = ${time}; rotation = ${m.rotation} }`);
+                            });
+                        }
+                        scriptLines.push(`$cuts = @()`);
+                        if (sel.cuts) {
+                            sel.cuts.forEach(c => {
+                                scriptLines.push(`$cuts += @{ start = ${c.start}; end = ${c.end} }`);
+                            });
+                        }
+
+                        // Process to a temporary file, then move back
+                        scriptLines.push(`$processedPath = Join-Path -Path $env:TEMP -ChildPath '${escapedVideoName}'`);
+                        scriptLines.push(`Process-Video -sourcePath "$sourcePath" -targetPath "$processedPath" -markers $markers -cuts $cuts`);
+                        scriptLines.push(`if (Test-Path -LiteralPath "$processedPath") {`);
+                        scriptLines.push(`    Move-Item -LiteralPath "$processedPath" -Destination "$sourcePath" -Force`);
+                        scriptLines.push(`    Write-Host "Processed and updated: ${escapedVideoName}"`);
+                        scriptLines.push(`}`);
+                    }
+                });
+                scriptLines.push('');
+            }
 
             // --- Moving Videos and Thumbnails ---
             const fileMoves = selectionsToProcess.filter(sel => sel.targetProject);
@@ -1478,57 +2028,57 @@
                     const escapedTargetProjectPath = escapePSString(sel.targetProject);
                     const escapedSubfolder = escapePSString(sel.subfolder);
                     
-                    let sourceVideoPathVar = '\$PSScriptRoot';
+                    let sourceVideoPathVar = "$PSScriptRoot";
                     if (escapedSourceProjectPath) sourceVideoPathVar = `(Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedSourceProjectPath}')`;
                     if (escapedSubfolder) sourceVideoPathVar = `(Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedSubfolder}')`;
-                    scriptLines.push(`\$sourceVideoPath = Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedVideoName}'`);
+                    scriptLines.push(`$sourceVideoPath = Join-Path -Path ${sourceVideoPathVar} -ChildPath '${escapedVideoName}'`);
                     
-                    let targetVideoPathVar = `(Join-Path -Path \$PSScriptRoot -ChildPath '${escapedTargetProjectPath}')`;
-                    scriptLines.push(`\$targetVideoPath = Join-Path -Path ${targetVideoPathVar} -ChildPath '${escapedVideoName}'`);
+                    let targetVideoPathVar = `(Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedTargetProjectPath}')`;
+                    scriptLines.push(`$targetVideoPath = Join-Path -Path ${targetVideoPathVar} -ChildPath '${escapedVideoName}'`);
                     
-                    scriptLines.push('if (Test-Path -LiteralPath \$sourceVideoPath) {');
-                    scriptLines.push('    Move-Item -LiteralPath \$sourceVideoPath -Destination \$targetVideoPath -Force');
-                    scriptLines.push(`    Write-Host "Moved video to: ${escapedTargetProjectPath}\\${escapedVideoName}"`);
+                    scriptLines.push('if (Test-Path -LiteralPath "$sourceVideoPath") {');
+                    scriptLines.push('    Move-Item -LiteralPath "$sourceVideoPath" -Destination "$targetVideoPath" -Force');
+                    scriptLines.push(`    Write-Host "Moved video to: ${escapedTargetProjectPath}\${escapedVideoName}"`);
                     scriptLines.push('}');
                     
                     const thumbBase = sel.videoName.substring(0, sel.videoName.lastIndexOf('.'));
                     const escapedThumbBase = escapePSString(thumbBase);
                     
-                    scriptLines.push(`\$sourceProjectPath = ${escapedSourceProjectPath ? `Join-Path -Path \$PSScriptRoot -ChildPath '${escapedSourceProjectPath}'` : '\$PSScriptRoot'}`);
-                    scriptLines.push(`\$targetProjectPath = Join-Path -Path \$PSScriptRoot -ChildPath '${escapedTargetProjectPath}'`);
-                    scriptLines.push(`\$thumbDirs = @('Thumbnails', 'Edit Thumbnails')`);
-                    scriptLines.push(`foreach (\$dirName in \$thumbDirs) {`);
-                    scriptLines.push(`    \$srcDirPath = Join-Path -Path \$sourceProjectPath -ChildPath \$dirName`);
-                    scriptLines.push(`    \$tgtDirPath = Join-Path -Path \$targetProjectPath -ChildPath \$dirName`);
-                    scriptLines.push(`    if (-not (Test-Path -LiteralPath \$tgtDirPath)) { New-Item -ItemType Directory -Path \$tgtDirPath -Force | Out-Null }`);
-                    scriptLines.push(`    if (Test-Path -LiteralPath \$srcDirPath) {`);
-                    scriptLines.push(`        Get-ChildItem -Path \$srcDirPath -Filter '${escapedThumbBase}_*' | ForEach-Object { Move-Item -LiteralPath \$_.FullName -Destination \$tgtDirPath -Force }`);
-                    scriptLines.push(`        Write-Host "Moved thumbnails for ${escapedVideoName} to ${escapedTargetProjectPath}\\$dirName"`);
+                    scriptLines.push(`$sourceProjectPath = ${escapedSourceProjectPath ? `Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedSourceProjectPath}'` : "$PSScriptRoot"}`);
+                    scriptLines.push(`$targetProjectPath = Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedTargetProjectPath}'`);
+                    scriptLines.push(`$thumbDirs = @('Thumbnails', 'Edit Thumbnails')`);
+                    scriptLines.push(`foreach ($dirName in $thumbDirs) {`);
+                    scriptLines.push(`    $srcDirPath = Join-Path -Path "$sourceProjectPath" -ChildPath $dirName`);
+                    scriptLines.push(`    $tgtDirPath = Join-Path -Path "$targetProjectPath" -ChildPath $dirName`);
+                    scriptLines.push(`    if (-not (Test-Path -LiteralPath "$tgtDirPath")) { New-Item -ItemType Directory -Path "$tgtDirPath" -Force | Out-Null }`);
+                    scriptLines.push(`    if (Test-Path -LiteralPath "$srcDirPath") {`);
+                    scriptLines.push(`        Get-ChildItem -Path "$srcDirPath" -Filter '${escapedThumbBase}_*' | ForEach-Object { Move-Item -LiteralPath "$_.FullName" -Destination "$tgtDirPath" -Force }`);
+                    scriptLines.push(`        Write-Host "Moved thumbnails for ${escapedVideoName} to ${escapedTargetProjectPath}\$dirName"`);
                     scriptLines.push(`    }`);
                     scriptLines.push(`}`);
 
                     // Move subfolder shortcuts
-                    scriptLines.push(`\$srcScPath = Join-Path -Path \$sourceProjectPath -ChildPath 'sc'`);
-                    scriptLines.push(`\$tgtScPath = Join-Path -Path \$targetProjectPath -ChildPath 'sc'`);
-                    scriptLines.push(`\$scFileName = '${escapedVideoName}.lnk'`);
-                    scriptLines.push(`\$srcScFile = Join-Path -Path \$srcScPath -ChildPath \$scFileName`);
-                    scriptLines.push(`if (Test-Path -LiteralPath \$srcScFile) {`);
-                    scriptLines.push(`    if (-not (Test-Path -LiteralPath \$tgtScPath)) { New-Item -ItemType Directory -Path \$tgtScPath -Force | Out-Null }`);
-                    scriptLines.push(`    \$tgtScFile = Join-Path -Path \$tgtScPath -ChildPath \$scFileName`);
-                    scriptLines.push(`    Move-Item -LiteralPath \$srcScFile -Destination \$tgtScFile -Force`);
-                    scriptLines.push(`    \$shortcut = \$wshell.CreateShortcut(\$tgtScFile)`);
-                    scriptLines.push(`    \$shortcut.TargetPath = \$targetVideoPath`);
-                    scriptLines.push(`    \$shortcut.Save()`);
+                    scriptLines.push(`$srcScPath = Join-Path -Path "$sourceProjectPath" -ChildPath 'sc'`);
+                    scriptLines.push(`$tgtScPath = Join-Path -Path "$targetProjectPath" -ChildPath 'sc'`);
+                    scriptLines.push(`$scFileName = '${escapedVideoName}.lnk'`);
+                    scriptLines.push(`$srcScFile = Join-Path -Path "$srcScPath" -ChildPath $scFileName`);
+                    scriptLines.push(`if (Test-Path -LiteralPath "$srcScFile") {`);
+                    scriptLines.push(`    if (-not (Test-Path -LiteralPath "$tgtScPath")) { New-Item -ItemType Directory -Path "$tgtScPath" -Force | Out-Null }`);
+                    scriptLines.push(`    $tgtScFile = Join-Path -Path "$tgtScPath" -ChildPath $scFileName`);
+                    scriptLines.push(`    Move-Item -LiteralPath "$srcScFile" -Destination "$tgtScFile" -Force`);
+                    scriptLines.push(`    $shortcut = $wshell.CreateShortcut($tgtScFile)`);
+                    scriptLines.push(`    $shortcut.TargetPath = $targetVideoPath`);
+                    scriptLines.push(`    $shortcut.Save()`);
                     scriptLines.push(`    Write-Host "Moved and updated subfolder shortcut for ${escapedVideoName}"`);
                     scriptLines.push(`}`);
 
                     // Update root shortcuts if they exist
-                    scriptLines.push(`\$rootScPath = Join-Path -Path \$PSScriptRoot -ChildPath 'sc'`);
-                    scriptLines.push(`\$rootScFile = Join-Path -Path \$rootScPath -ChildPath \$scFileName`);
-                    scriptLines.push(`if (Test-Path -LiteralPath \$rootScFile) {`);
-                    scriptLines.push(`    \$shortcut = \$wshell.CreateShortcut(\$rootScFile)`);
-                    scriptLines.push(`    \$shortcut.TargetPath = \$targetVideoPath`);
-                    scriptLines.push(`    \$shortcut.Save()`);
+                    scriptLines.push(`$rootScPath = Join-Path -Path "$PSScriptRoot" -ChildPath 'sc'`);
+                    scriptLines.push(`$rootScFile = Join-Path -Path "$rootScPath" -ChildPath $scFileName`);
+                    scriptLines.push(`if (Test-Path -LiteralPath "$rootScFile") {`);
+                    scriptLines.push(`    $shortcut = $wshell.CreateShortcut($rootScFile)`);
+                    scriptLines.push(`    $shortcut.TargetPath = $targetVideoPath`);
+                    scriptLines.push(`    $shortcut.Save()`);
                     scriptLines.push(`    Write-Host "Updated root shortcut target for ${escapedVideoName}"`);
                     scriptLines.push(`}`);
                     
@@ -1536,411 +2086,96 @@
                 });
             }
 
-            const hasCreations = selectionsToProcess.some(sel => {
-                if (sel.type === 'delete-sc') return false;
-                const key = sel.projectPath + '|' + sel.videoName;
-                const initial = initialShortcutSelections.get(key);
-                return !initial || initial.type !== sel.type || sel.targetProject;
-            });
-
-            if (hasCreations) {
-                 scriptLines.push('# --- Creating Shortcuts ---');
-            }
-
-            let needsRootSc = false;
-            const subfolderProjects = new Set();
-            selectionsToProcess.forEach(sel => {
-                const selectionType = sel.type || 'root-sc';
-                if (selectionType === 'root-sc' || selectionType === 'both-sc') {
-                    needsRootSc = true;
-                }
-                if (selectionType === 'subfolder-sc' || selectionType === 'both-sc') {
-                    subfolderProjects.add(sel.projectPath || "");
-                }
-            });
-
-            if (needsRootSc) {
-                scriptLines.push('\$rootScFolder = Join-Path -Path \$PSScriptRoot -ChildPath \'sc\'');
-                scriptLines.push('if (-not (Test-Path -Path \$rootScFolder)) { New-Item -ItemType Directory -Path \$rootScFolder -Force | Out-Null }');
-                scriptLines.push('');
-            }
-            
-            subfolderProjects.forEach(projectPath => {
-                const escapedProjectPath = escapePSString(projectPath);
-                if (escapedProjectPath) {
-                    scriptLines.push(`\$subfolderScPath = Join-Path -Path (Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}') -ChildPath 'sc'`);
-                } else {
-                    scriptLines.push('\$subfolderScPath = Join-Path -Path \$PSScriptRoot -ChildPath \'sc\'');
-                }
-                scriptLines.push('if (-not (Test-Path -Path \$subfolderScPath)) { New-Item -ItemType Directory -Path \$subfolderScPath -Force | Out-Null }');
-            });
-
-            const targetProjects = new Set(selectionsToProcess.filter(sel => sel.targetProject && (sel.type === 'subfolder-sc' || sel.type === 'both-sc')).map(sel => sel.targetProject));
-            targetProjects.forEach(projectPath => {
-                if (!subfolderProjects.has(projectPath)) {
-                    const escapedProjectPath = escapePSString(projectPath);
-                    scriptLines.push(`\$subfolderScPath = Join-Path -Path (Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}') -ChildPath 'sc'`);
-                    scriptLines.push('if (-not (Test-Path -Path \$subfolderScPath)) { New-Item -ItemType Directory -Path \$subfolderScPath -Force | Out-Null }');
-                }
-            });
-            if (subfolderProjects.size > 0) {
-                scriptLines.push('');
-            }
-
-            selectionsToProcess.forEach(sel => {
-                const key = sel.projectPath + '|' + sel.videoName;
-                const initial = initialShortcutSelections.get(key);
-                if (initial && initial.type === sel.type && !sel.targetProject) {
-                    return; // Skip if unchanged and not moved
-                }
+            const selections = selectionsToProcess.filter(sel => sel.type);
+            if (selections.length > 0) {
+                scriptLines.push('# --- Shortcut Creation and Rotation Updates ---');
                 
-                const selectionType = sel.type;
-                if (!selectionType || selectionType === 'delete-sc') return;
+                const rotationUpdatesByProject = {};
 
-                const escapedVideoName = escapePSString(sel.videoName);
-                const escapedProjectPath = escapePSString(sel.projectPath);
-                const escapedSubfolder = escapePSString(sel.subfolder);
-                const escapedTargetProjectPath = sel.targetProject ? escapePSString(sel.targetProject) : null;
-
-                let targetPathConstruction = '\$PSScriptRoot';
-                if (escapedTargetProjectPath !== null) {
-                    if (escapedTargetProjectPath !== '') {
-                        targetPathConstruction = `(Join-Path -Path ${targetPathConstruction} -ChildPath '${escapedTargetProjectPath}')`;
-                    }
-                } else {
-                    if (escapedProjectPath) {
-                        targetPathConstruction = `(Join-Path -Path ${targetPathConstruction} -ChildPath '${escapedProjectPath}')`;
-                    }
-                    if (escapedSubfolder) {
-                        targetPathConstruction = `(Join-Path -Path ${targetPathConstruction} -ChildPath '${escapedSubfolder}')`;
-                    }
-                }
-                targetPathConstruction = `Join-Path -Path ${targetPathConstruction} -ChildPath '${escapedVideoName}'`;
-
-                scriptLines.push(`    # Shortcut for: ${sel.projectPath}\\${sel.videoName} (Type: ${selectionType})`);
-                scriptLines.push(`    \$targetPath = ${targetPathConstruction}`);
-
-                const createShortcut = (scPath, logMsg) => {
-                    scriptLines.push(`    \$shortcutPath = ${scPath}`);
-                    scriptLines.push('    try {');
-                    scriptLines.push('        \$shortcut = \$wshell.CreateShortcut(\$shortcutPath)');
-                    scriptLines.push('        \$shortcut.TargetPath = \$targetPath');
-                    scriptLines.push('        \$shortcut.Save()');
-                    scriptLines.push(`        Write-Host "${logMsg}"`);
-                    scriptLines.push('    } catch {');
-                    scriptLines.push('        Write-Host "FAILED to create shortcut: \$shortcutPath" -ForegroundColor Red');
-                    scriptLines.push('        Write-Host \$_.Exception.Message -ForegroundColor Red');
-                    scriptLines.push('    }');
-                };
-
-                if (selectionType === 'root-sc' || selectionType === 'both-sc') {
-                    const initiallyInRoot = initial && (initial.type === 'root-sc' || initial.type === 'both-sc');
-                    if (!initiallyInRoot) {
-                        createShortcut(`Join-Path -Path \$rootScFolder -ChildPath ('${escapedVideoName}' + '.lnk')`, `Created root shortcut: ${escapedVideoName}`);
-                    }
-                }
-
-                if (selectionType === 'subfolder-sc' || selectionType === 'both-sc') {
-                    const initiallyInSubfolder = initial && (initial.type === 'subfolder-sc' || initial.type === 'both-sc');
-                    if (!initiallyInSubfolder || sel.targetProject) {
-                        let scDirPath;
-                        const projectPathToUse = escapedTargetProjectPath || escapedProjectPath;
-                        if (projectPathToUse) {
-                            scDirPath = `Join-Path -Path (Join-Path -Path \$PSScriptRoot -ChildPath '${projectPathToUse}') -ChildPath 'sc'`;
-                        } else {
-                            scDirPath = 'Join-Path -Path \$PSScriptRoot -ChildPath \'sc\'';
-                        }
-                        const logPath = (escapedProjectPath ? escapedProjectPath + '\\' : '') + escapedVideoName;
-                        createShortcut(`Join-Path -Path (${scDirPath}) -ChildPath ('${escapedVideoName}' + '.lnk')`, `Created subfolder shortcut: ${logPath}`);
-                    }
-                }
-                scriptLines.push('');
-            });
-
-            // --- File Deletions (Videos and Thumbnails) ---
-            const fileDeletions = selectionsToProcess.filter(sel => sel.type === 'delete-sc');
-            if (fileDeletions.length > 0) {
-                scriptLines.push('# --- Deleting Videos and Thumbnails ---');
-                fileDeletions.forEach(sel => {
+                selections.forEach(sel => {
                     const escapedVideoName = escapePSString(sel.videoName);
-                    const escapedProjectPath = escapePSString(sel.projectPath);
+                    const escapedSourceProjectPath = escapePSString(sel.projectPath);
                     const escapedSubfolder = escapePSString(sel.subfolder);
+                    const targetProject = sel.targetProject || sel.projectPath;
+                    const escapedTargetProjectPath = escapePSString(targetProject);
                     
-                    let videoPathVar = '\$PSScriptRoot';
-                    if (escapedProjectPath) videoPathVar = `(Join-Path -Path ${videoPathVar} -ChildPath '${escapedProjectPath}')`;
+                    let videoPathVar = `(Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedTargetProjectPath}')`;
                     if (escapedSubfolder) videoPathVar = `(Join-Path -Path ${videoPathVar} -ChildPath '${escapedSubfolder}')`;
-                    scriptLines.push(`\$videoPath = Join-Path -Path ${videoPathVar} -ChildPath '${escapedVideoName}'`);
-                    
-                    scriptLines.push('if (Test-Path -LiteralPath \$videoPath) {');
-                    scriptLines.push('    Remove-Item -LiteralPath \$videoPath -Force');
-                    scriptLines.push(`    Write-Host "Deleted video: ${escapedVideoName}"`);
-                    scriptLines.push('}');
-                    
-                    const thumbBase = sel.videoName.substring(0, sel.videoName.lastIndexOf('.'));
-                    const escapedThumbBase = escapePSString(thumbBase);
-                    
-                    let projectPathVar = '\$PSScriptRoot';
-                    if (escapedProjectPath) {
-                        projectPathVar = `Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}'`;
-                    }
-                    scriptLines.push(`\$projectPath = ${projectPathVar}`);
-                    scriptLines.push(`\$thumbDirs = @('Thumbnails', 'Edit Thumbnails')`);
-                    scriptLines.push(`foreach (\$dirName in \$thumbDirs) {`);
-                    scriptLines.push(`    \$dirPath = Join-Path -Path \$projectPath -ChildPath \$dirName`);
-                    scriptLines.push(`    if (Test-Path -LiteralPath \$dirPath) {`);
-                    scriptLines.push(`        Get-ChildItem -Path \$dirPath -Filter '${escapedThumbBase}_*' | Remove-Item -Force`);
-                    scriptLines.push(`        Write-Host "Deleted thumbnails for ${escapedVideoName} in \$dirName"`);
-                    scriptLines.push(`    }`);
-                    scriptLines.push(`}`);
-                    scriptLines.push('');
-                });
-            }
+                    scriptLines.push(`$videoPath = Join-Path -Path ${videoPathVar} -ChildPath '${escapedVideoName}'`);
 
-            // --- Deletions ---
-            const deletions = [];
-            initialShortcutSelections.forEach((initial, key) => {
-                const current = shortcutSelections.get(key);
-                const parts = key.split('|');
-                const projectPath = parts[0];
-                const videoName = parts[1];
-                const escapedVideoName = escapePSString(videoName);
-                const escapedProjectPath = escapePSString(projectPath);
+                    const isEditorProcessed = (sel.cuts && sel.cuts.length > 0) || (sel.markers && sel.markers.length > 1);
 
-                const initiallyInSubfolder = initial.type === 'subfolder-sc' || initial.type === 'both-sc';
-                const currentlyInSubfolder = current && (current.type === 'subfolder-sc' || current.type === 'both-sc');
-                if (initiallyInSubfolder && !currentlyInSubfolder) {
-                    let subfolderScPath;
-                    if (escapedProjectPath) {
-                        subfolderScPath = `(Join-Path -Path (Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}') -ChildPath 'sc')`;
+                    if (sel.type === 'delete-sc') {
+                        scriptLines.push(`if (Test-Path -LiteralPath "$videoPath") { Remove-Item -LiteralPath "$videoPath" -Force; Write-Host "Deleted: ${escapedVideoName}" }`);
+                        if (!rotationUpdatesByProject[targetProject]) rotationUpdatesByProject[targetProject] = { add: {}, remove: [] };
+                        rotationUpdatesByProject[targetProject].remove.push(escapedVideoName);
                     } else {
-                        subfolderScPath = '(Join-Path -Path \$PSScriptRoot -ChildPath \'sc\')';
-                    }
-                    const fullScPath = `(Join-Path -Path ${subfolderScPath} -ChildPath ('${escapedVideoName}' + '.lnk'))`;
-                    const logPath = (escapedProjectPath ? escapedProjectPath + '\\' : '') + escapedVideoName;
-                    deletions.push(`if (Test-Path -LiteralPath ${fullScPath}) { Remove-Item -LiteralPath ${fullScPath}; Write-Host "Deleted subfolder shortcut: ${logPath}" }`);
-                }
+                        const scDir = sel.type === 'playlist-sc' ? 'playlist' : 'sc';
+                        scriptLines.push(`$scPath = Join-Path -Path "$PSScriptRoot" -ChildPath '${scDir}'`);
+                        scriptLines.push(`if (-not (Test-Path -LiteralPath "$scPath")) { New-Item -ItemType Directory -Path "$scPath" -Force | Out-Null }`);
+                        scriptLines.push(`$scFile = Join-Path -Path "$scPath" -ChildPath '${escapedVideoName}.lnk'`);
+                        scriptLines.push(`$shortcut = $wshell.CreateShortcut($scFile)`);
+                        scriptLines.push(`$shortcut.TargetPath = $videoPath`);
+                        scriptLines.push(`$shortcut.Save()`);
+                        scriptLines.push(`Write-Host "Created shortcut for: ${escapedVideoName}"`);
 
-                const initiallyInRoot = initial.type === 'root-sc' || initial.type === 'both-sc';
-                const currentlyInRoot = current && (current.type === 'root-sc' || current.type === 'both-sc');
-                if (initiallyInRoot && !currentlyInRoot) {
-                    const rootScFolder = `(Join-Path -Path \$PSScriptRoot -ChildPath 'sc')`;
-                    const fullScPath = `(Join-Path -Path ${rootScFolder} -ChildPath ('${escapedVideoName}' + '.lnk'))`;
-                    deletions.push(`if (Test-Path -LiteralPath ${fullScPath}) { Remove-Item -LiteralPath ${fullScPath}; Write-Host "Deleted root shortcut: ${escapedVideoName}" }`);
-                }
-            });
-
-            if (deletions.length > 0) {
-                scriptLines.push('# --- Deleting Shortcuts ---');
-                scriptLines.push(...deletions);
-                scriptLines.push('');
-            }
-
-            // --- Rotation Data ---
-            const rotationUpdates = new Map(); // projectPath -> { toAdd: {}, toRemove: [] }
-            
-            const getUpdate = (proj) => {
-                if (!rotationUpdates.has(proj)) {
-                    rotationUpdates.set(proj, { toAdd: {}, toRemove: [] });
-                }
-                return rotationUpdates.get(proj);
-            };
-
-            shortcutSelections.forEach((sel, key) => {
-                const initial = initialShortcutSelections.get(key);
-                const isMoved = sel.targetProject && sel.targetProject !== sel.projectPath;
-                
-                const currentRot = sel.rotation || "0";
-                const initialRot = (initial && initial.rotation) || "0";
-                const currentFlipped = !!sel.flipped;
-                const initialFlipped = initial ? !!initial.flipped : false;
-
-                const getVal = (r, f) => (f ? `${r}:flip` : r);
-
-                if (isMoved) {
-                    // Remove from source
-                    getUpdate(sel.projectPath).toRemove.push(sel.videoName);
-                    // Add/Update in destination
-                    const rotationVal = getVal(currentRot, currentFlipped);
-                    if (rotationVal !== "0") {
-                        getUpdate(sel.targetProject).toAdd[sel.videoName] = rotationVal;
-                    }
-                } else {
-                    // Not moved, check if rotation or flip changed
-                    if (currentRot !== initialRot || currentFlipped !== initialFlipped) {
-                        const rotationVal = getVal(currentRot, currentFlipped);
-                        if (rotationVal === "0") {
-                            getUpdate(sel.projectPath).toRemove.push(sel.videoName);
+                        if (sel.rotation && sel.rotation !== "0") {
+                            if (isEditorProcessed) {
+                                if (!rotationUpdatesByProject[targetProject]) rotationUpdatesByProject[targetProject] = { add: {}, remove: [] };
+                                rotationUpdatesByProject[targetProject].remove.push(escapedVideoName);
+                            } else {
+                                if (!rotationUpdatesByProject[targetProject]) rotationUpdatesByProject[targetProject] = { add: {}, remove: [] };
+                                rotationUpdatesByProject[targetProject].add[escapedVideoName] = sel.rotation + (sel.flipped ? ':flip' : '');
+                            }
                         } else {
-                            getUpdate(sel.projectPath).toAdd[sel.videoName] = rotationVal;
+                            if (!rotationUpdatesByProject[targetProject]) rotationUpdatesByProject[targetProject] = { add: {}, remove: [] };
+                            rotationUpdatesByProject[targetProject].remove.push(escapedVideoName);
                         }
                     }
-                }
-            });
+                });
 
-            if (rotationUpdates.size > 0) {
-                scriptLines.push('# --- Updating Rotation Data ---');
-                rotationUpdates.forEach((update, projectPath) => {
-                    const escapedProjectPath = escapePSString(projectPath);
-                    const projectPathVar = escapedProjectPath ? `(Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}')` : '\$PSScriptRoot';
-                    const rotationFileVar = `(Join-Path -Path ${projectPathVar} -ChildPath 'rotation_data.txt')`;
+                Object.keys(rotationUpdatesByProject).forEach(projectPath => {
+                    const updates = rotationUpdatesByProject[projectPath];
+                    const escapedProject = escapePSString(projectPath);
+                    scriptLines.push(`$projectPath = Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedProject}'`);
+                    scriptLines.push(`$rotationFile = Join-Path -Path "$projectPath" -ChildPath 'rotation_data.txt'`);
                     
-                    scriptLines.push(`\$toAdd = @{`);
-                    for (const [vName, rot] of Object.entries(update.toAdd)) {
-                        scriptLines.push(`    '${escapePSString(vName)}' = '${rot}'`);
-                    }
-                    scriptLines.push(`}`);
-                    scriptLines.push(`\$toRemove = @(`);
-                    update.toRemove.forEach(vName => {
-                        scriptLines.push(`    '${escapePSString(vName)}'`);
+                    let addHash = "@{";
+                    Object.keys(updates.add).forEach(name => {
+                        addHash += `'${name}' = '${updates.add[name]}'; `;
                     });
-                    scriptLines.push(`)`);
-                    scriptLines.push(`Update-RotationData -filePath ${rotationFileVar} -toAdd \$toAdd -toRemove \$toRemove`);
-                    scriptLines.push(`Write-Host "Surgically updated rotation_data.txt for ${escapedProjectPath || '(Root)'}"`);
-                });
-                scriptLines.push('');
+                    addHash += "}";
 
-                scriptLines.push('# --- Update Central LUA Rotation File ---');
-                scriptLines.push("\$luaPath = 'C:\\Bridge\\misc\\tools\\mpv-x86_64-v3-20260418-git-4377cce\\portable_config\\scripts\\autorotate.lua'");
-                scriptLines.push('\$script:rotatedFiles = @{}');
-                shortcutSelections.forEach((sel, key) => {
-                    if (sel.rotation && sel.rotation !== "0") {
-                        scriptLines.push(`\$script:rotatedFiles['${escapePSString(sel.videoName)}'] = ${sel.rotation}`);
-                    }
-                });
+                    let removeArray = "@(";
+                    updates.remove.forEach(name => {
+                        removeArray += `'${name}', `;
+                    });
+                    removeArray += ")";
 
-                scriptLines.push('\$allRotations = @{}');
-                scriptLines.push('if (Test-Path -LiteralPath \$luaPath) {');
-                scriptLines.push('    \$existingContent = Get-Content -LiteralPath \$luaPath -Raw');
-                scriptLines.push('    if (\$existingContent -match \'(?s)local rotations = \\{(.*?)\\}\') {');
-                scriptLines.push('        \$inner = \$matches[1]');
-                scriptLines.push('        \$entries = \$inner -split \',\'');
-                scriptLines.push('        foreach (\$entry in \$entries) {');
-                scriptLines.push('            if (\$entry -match "\\[[\'\\"\" ]*(.*?)[\'\\"\" ]*\\]\\s*=\\s*[\'\\"\" ]?(\\d+)[\'\\"\" ]?") {');
-                scriptLines.push('                \$allRotations[\$matches[1]] = \$matches[2]');
-                scriptLines.push('            }');
-                scriptLines.push('        }');
-                scriptLines.push('    }');
-                scriptLines.push('}');
-                scriptLines.push('foreach (\$file in \$script:rotatedFiles.Keys) { \$allRotations[\$file] = \$script:rotatedFiles[\$file] }');
-                scriptLines.push('if (\$allRotations.Count -gt 0) {');
-                scriptLines.push('    \$luaDir = Split-Path -Parent \$luaPath');
-                scriptLines.push('    if (-not (Test-Path -Path \$luaDir)) { New-Item -ItemType Directory -Path \$luaDir -Force | Out-Null }');
-                scriptLines.push('    \$luaContent = @()');
-                scriptLines.push("    \$luaContent += 'local rotations = {'");
-                scriptLines.push('    foreach (\$file in \$allRotations.Keys) {');
-                scriptLines.push('        \$rot = \$allRotations[\$file]');
-                scriptLines.push("        \$escapedFile = \$file.Replace(\"'\", \"\\\\'\")");
-                scriptLines.push("        \$luaContent += \"    ['\$escapedFile'] = \$rot,\"");
-                scriptLines.push("    }");
-                scriptLines.push("    \$luaContent += '}'");
-                scriptLines.push("    \$luaContent += ''");
-                scriptLines.push("    \$luaContent += 'mp.register_event(\"file-loaded\", function()'");
-                scriptLines.push("    \$luaContent += '    local path = mp.get_property(\"path\")'");
-                scriptLines.push("    \$luaContent += '    if not path then return end'");
-                scriptLines.push("    \$luaContent += ''");
-                scriptLines.push("    \$luaContent += '    mp.set_property(\"video-rotate\", 0)'");
-                scriptLines.push("    \$luaContent += ''");
-                scriptLines.push("    \$luaContent += '    local filename = path:match(\"([^/\\\\\\\\]+)\$\") or path'");
-                scriptLines.push("    \$luaContent += ''");
-                scriptLines.push("    \$luaContent += '    if rotations[filename] then'");
-                scriptLines.push("    \$luaContent += '        mp.set_property(\"video-rotate\", rotations[filename])'");
-                scriptLines.push("    \$luaContent += '    end'");
-                scriptLines.push("    \$luaContent += 'end)'");
-                scriptLines.push('    \$luaContent | Out-File -FilePath \$luaPath -Encoding utf8');
-                scriptLines.push('    Write-Host "Updated MPV autorotate script at: \$luaPath"');
-                scriptLines.push('}');
-                scriptLines.push('');
-            }
-
-            // --- Update Central LUA Flip File ---
-            const flippedFiles = Array.from(shortcutSelections.values()).filter(sel => sel.flipped);
-            if (flippedFiles.length > 0) {
-                scriptLines.push('# --- Update Central LUA Flip File ---');
-                scriptLines.push("\$flipLuaPath = 'C:\\Bridge\\misc\\tools\\mpv-x86_64-v3-20260418-git-4377cce\\portable_config\\scripts\\flip.lua'");
-                scriptLines.push('\$script:flippedFiles = @{}');
-                flippedFiles.forEach(sel => {
-                    scriptLines.push(`\$script:flippedFiles['${escapePSString(sel.videoName)}'] = 'hflip'`);
-                });
-
-                scriptLines.push('\$allFlips = @{}');
-                scriptLines.push('if (Test-Path -LiteralPath \$flipLuaPath) {');
-                scriptLines.push('    \$existingFlipContent = Get-Content -LiteralPath \$flipLuaPath -Raw');
-                scriptLines.push('    if (\$existingFlipContent -match \'(?s)local flips = \\{(.*?)\\}\') {');
-                scriptLines.push('        \$innerFlip = \$matches[1]');
-                scriptLines.push('        \$flipEntries = \$innerFlip -split \',\'');
-                scriptLines.push('        foreach (\$fEntry in \$flipEntries) {');
-                scriptLines.push('            if (\$fEntry -match "\\[[\'\\"\" ]*(.*?)[\'\\"\" ]*\\]\\s*=\\s*[\'\\"\" ]*(.*?)[\'\\"\" ]*") {');
-                scriptLines.push('                \$allFlips[\$matches[1]] = \$matches[2]');
-                scriptLines.push('            }');
-                scriptLines.push('        }');
-                scriptLines.push('    }');
-                scriptLines.push('}');
-                scriptLines.push('foreach (\$fFile in \$script:flippedFiles.Keys) { \$allFlips[\$fFile] = \$script:flippedFiles[\$fFile] }');
-                scriptLines.push('if (\$allFlips.Count -gt 0) {');
-                scriptLines.push('    \$flipLuaDir = Split-Path -Parent \$flipLuaPath');
-                scriptLines.push('    if (-not (Test-Path -Path \$flipLuaDir)) { New-Item -ItemType Directory -Path \$flipLuaDir -Force | Out-Null }');
-                scriptLines.push('    \$flipLuaContent = @()');
-                scriptLines.push("    \$flipLuaContent += 'local flips = {'");
-                scriptLines.push('    foreach (\$fFile in \$allFlips.Keys) {');
-                scriptLines.push('        \$filter = \$allFlips[\$fFile]');
-                scriptLines.push("        \$escapedFFile = \$fFile.Replace(\"'\", \"\\\\'\")");
-                scriptLines.push("        \$flipLuaContent += \"    ['\$escapedFFile'] = '\$filter',\"");
-                scriptLines.push("    }");
-                scriptLines.push("    \$flipLuaContent += '}'");
-                scriptLines.push("    \$flipLuaContent += ''");
-                scriptLines.push("    \$flipLuaContent += 'mp.register_event(\"file-loaded\", function()'");
-                scriptLines.push("    \$flipLuaContent += '    local path = mp.get_property(\"path\")'");
-                scriptLines.push("    \$flipLuaContent += '    local filename = path:match(\"^.+[\\\\\\\\/](.+)\$\") or path'");
-                scriptLines.push("    \$flipLuaContent += ''");
-                scriptLines.push("    \$flipLuaContent += '    mp.command(\"vf remove @flip\")'");
-                scriptLines.push("    \$flipLuaContent += ''");
-                scriptLines.push("    \$flipLuaContent += '    if flips[filename] then'");
-                scriptLines.push("    \$flipLuaContent += '        local filter = flips[filename]'");
-                scriptLines.push("    \$flipLuaContent += '        mp.commandv(\"vf\", \"add\", \"@flip:\" .. filter)'");
-                scriptLines.push("    \$flipLuaContent += '    end'");
-                scriptLines.push("    \$flipLuaContent += 'end)'");
-                scriptLines.push('    \$flipLuaContent | Out-File -FilePath \$flipLuaPath -Encoding utf8');
-                scriptLines.push('    Write-Host "Updated MPV flip script at: \$flipLuaPath"');
-                scriptLines.push('}');
-                scriptLines.push('');
-            }
-
-            const timestamp = new Date().toISOString();
-
-            if (selectedProjectPaths.size > 0) {
-                scriptLines.push('# --- Placing Genuine Timestamps ---');
-                
-                selectedProjectPaths.forEach(projectPath => {
-                    const escapedProjectPath = escapePSString(projectPath);
-                    const projectPathVar = escapedProjectPath ? `Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}'` : '\$PSScriptRoot';
-
-                    scriptLines.push(`Write-Host "Placing genuine timestamp for project: ${projectPath || '(Root)'}"`);
-                    scriptLines.push(`\$projectFolder = ${projectPathVar}`);
-                    scriptLines.push(`\$scDateFile = Join-Path -Path \$projectFolder -ChildPath 'scdate.txt'`);
-                    scriptLines.push(`Set-Content -Path \$scDateFile -Value "${timestamp}"`);
-                    scriptLines.push('');
+                    scriptLines.push(`Update-RotationData -filePath "$rotationFile" -toAdd ${addHash} -toRemove ${removeArray}`);
+                    scriptLines.push(`Write-Host "Updated rotation data for project: ${escapedProject}"`);
                 });
             }
 
+            const timestamp = Date.now();
             if (dummyTimestampProjects.size > 0) {
                 scriptLines.push('# --- Placing Dummy Timestamps ---');
-                
                 dummyTimestampProjects.forEach(projectPath => {
                     const escapedProjectPath = escapePSString(projectPath);
-                    const projectPathVar = escapedProjectPath ? `Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}'` : '\$PSScriptRoot';
-
+                    const projectPathVar = escapedProjectPath ? `Join-Path -Path "$PSScriptRoot" -ChildPath '${escapedProjectPath}'` : "$PSScriptRoot";
                     scriptLines.push(`Write-Host "Placing dummy timestamp for project: ${projectPath || '(Root)'}"`);
-                    scriptLines.push(`\$projectFolder = ${projectPathVar}`);
-                    scriptLines.push(`\$scDateFile = Join-Path -Path \$projectFolder -ChildPath 'scdate.txt'`);
-                    scriptLines.push(`Set-Content -Path \$scDateFile -Value "dummy:${timestamp}"`);
+                    scriptLines.push(`$projectFolder = ${projectPathVar}`);
+                    scriptLines.push(`$scDateFile = Join-Path -Path "$projectFolder" -ChildPath 'scdate.txt'`);
+                    scriptLines.push(`Set-Content -Path "$scDateFile" -Value "dummy:${timestamp}"`);
                     scriptLines.push('');
                 });
             }
 
-            scriptLines.push('Write-Host "Script execution complete."');
+            scriptLines.push('Write-Host "Processing Complete!" -ForegroundColor Green');
             scriptLines.push('Read-Host -Prompt "Press Enter to exit"');
 
-            const scriptStr = scriptLines.join('\r\n');
+            const scriptStr = scriptLines.join("
+");
             batchScriptTextArea.value = scriptStr;
             const blob = new Blob(['\ufeff', scriptStr], { type: 'application/octet-stream' });
             downloadScriptLink.href = URL.createObjectURL(blob);
@@ -3052,17 +3287,17 @@
             const isPlaylistRootMode = (currentMode === 'playlist-root' || currentMode === 'update-playlist-root');
 
             let scriptLines = [
-                '\$PSScriptRoot = Split-Path -Parent -Path \$MyInvocation.MyCommand.Definition',
+                "\$PSScriptRoot = Split-Path -Parent -Path \"\$MyInvocation.MyCommand.Definition\"",
                 '\$script:playlistContent = New-Object System.Collections.Generic.List[string]',
                 '\$script:playlistContent.Add("#EXTM3U")',
                 '\$script:addedTargets = New-Object System.Collections.Generic.HashSet[string]([System.StringComparer]::OrdinalIgnoreCase)',
                 '\$script:rotatedFiles = @{}',
                 '\$wshell = New-Object -ComObject WScript.Shell',
-                "\$rootScFolder = [System.IO.Path]::GetFullPath((Join-Path -Path \$PSScriptRoot -ChildPath 'sc'))",
+                "\$rootScFolder = [System.IO.Path]::GetFullPath((Join-Path -Path \"$PSScriptRoot\" -ChildPath 'sc'))",
                 '',
                 'function Add-PlaylistEntry {',
                 '    param([string]\$path, [string]\$rotation, [int]\$multiplier, [string]\$rotationKey)',
-                '    \$fullPath = [System.IO.Path]::GetFullPath((Join-Path -Path \$PSScriptRoot -ChildPath \$path))',
+                '    \$fullPath = [System.IO.Path]::GetFullPath((Join-Path -Path \"$PSScriptRoot\" -ChildPath \$path))',
                 '    \$key = if (\$rotationKey) { \$rotationKey } else { [System.IO.Path]::GetFileName(\$fullPath) }',
                 '    if (\$script:addedTargets.Add(\$fullPath)) {',
                 '        if (\$rotation -and \$rotation -ne "0") {',
@@ -3079,9 +3314,9 @@
                 'function Get-RotationDataMap {',
                 '    param([string]\$projectPath)',
                 '    \$map = @{}',
-                '    \$rotFile = Join-Path -Path \$projectPath -ChildPath "rotation_data.txt"',
-                '    if (Test-Path -LiteralPath \$rotFile) {',
-                '        Get-Content -LiteralPath \$rotFile | ForEach-Object {',
+                '    \$rotFile = Join-Path -Path \"$projectPath\" -ChildPath "rotation_data.txt"',
+                '    if (Test-Path -LiteralPath \"$rotFile\") {',
+                '        Get-Content -LiteralPath \"$rotFile\" | ForEach-Object {',
                 '            if (\$_ -match "^(.*?):(\\d+)$") {',
                 '                \$map[\$matches[1].ToLower()] = \$matches[2]',
                 '            }',
@@ -3139,7 +3374,7 @@
                     const rotation = sel.rotation || "0";
 
                     if (currentMode === 'update-playlist-root') {
-                        scriptLines.push(`\$targetPath = [System.IO.Path]::GetFullPath((Join-Path -Path \$rootScFolder -ChildPath ('${escapedVideoName}' + '.lnk')))`);
+                        scriptLines.push(`\$targetPath = [System.IO.Path]::GetFullPath((Join-Path -Path \"$rootScFolder\" -ChildPath ('${escapedVideoName}' + '.lnk')))`);
                         scriptLines.push(`Add-PlaylistEntry -path \$targetPath -rotation '${rotation}' -multiplier ${multiplier} -rotationKey '${escapedVideoName}'`);
                         scriptLines.push(`Write-Host "Added to playlist (shortcut): ${escapedVideoName} (${multiplier}x)"`);
                     } else {
@@ -3166,12 +3401,12 @@
                 rootScSelections.forEach(sel => {
                     const escapedProjectPath = escapePSString(sel.projectPath);
                     const multiplier = sel.multiplier || 1;
-                    scriptLines.push(`\$rootSelections['' + [System.IO.Path]::GetFullPath((Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}'))] = ${multiplier}`);
+                    scriptLines.push(`\$rootSelections['' + [System.IO.Path]::GetFullPath((Join-Path -Path \"$PSScriptRoot\" -ChildPath '${escapedProjectPath}'))] = ${multiplier}`);
                 });
 
-                scriptLines.push('if (Test-Path -LiteralPath \$rootScFolder) {');
+                scriptLines.push('if (Test-Path -LiteralPath \"$rootScFolder\") {');
                 scriptLines.push('    \$rotationCache = @{}');
-                scriptLines.push('    \$shortcuts = Get-ChildItem -LiteralPath \$rootScFolder -File | Where-Object { \$_.Extension -match \'^\\.(lnk|ink)\$\' }');
+                scriptLines.push('    \$shortcuts = Get-ChildItem -LiteralPath \"$rootScFolder\" -File | Where-Object { \$_.Extension -match \'^\\.(lnk|ink)\$\' }');
                 scriptLines.push('    foreach (\$shortcutFile in \$shortcuts) {');
                 scriptLines.push('        \$targetPath = Get-ShortcutTarget \$shortcutFile.FullName');
                 scriptLines.push('        if (-not \$targetPath) { continue }');
@@ -3200,16 +3435,16 @@
                     const multiplier = sel.multiplier || 1;
                     let projectPathVar = '\$PSScriptRoot';
                     if (sel.projectPath) {
-                        projectPathVar = `Join-Path -Path \$PSScriptRoot -ChildPath '${escapedProjectPath}'`;
+                        projectPathVar = `Join-Path -Path \"$PSScriptRoot\" -ChildPath '${escapedProjectPath}'`;
                     }
                     scriptLines.push(`\$subfolderSelections['' + [System.IO.Path]::GetFullPath((${projectPathVar}))] = ${multiplier}`);
                 });
 
                 scriptLines.push('foreach (\$projPath in \$subfolderSelections.Keys) {');
-                scriptLines.push('    if (Test-Path -LiteralPath \$projPath) {');
+                scriptLines.push('    if (Test-Path -LiteralPath \"$projPath\") {');
                 scriptLines.push('        \$multiplier = \$subfolderSelections[\$projPath]');
                 scriptLines.push('        \$rotationMap = Get-RotationDataMap \$projPath');
-                scriptLines.push('        \$projectShortcuts = Get-ChildItem -LiteralPath \$projPath -Recurse -File | Where-Object { \$_.Extension -match \'^\\.(lnk|ink)\$\' -and -not \$_.FullName.StartsWith(\$rootScFolder + [IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase) }');
+                scriptLines.push('        \$projectShortcuts = Get-ChildItem -LiteralPath \"$projPath\" -Recurse -File | Where-Object { \$_.Extension -match \'^\\.(lnk|ink)\$\' -and -not \$_.FullName.StartsWith(\$rootScFolder + [IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase) }');
                 scriptLines.push('        foreach (\$shortcutFile in \$projectShortcuts) {');
                 scriptLines.push('            \$targetPath = Get-ShortcutTarget \$shortcutFile.FullName');
                 scriptLines.push('            if (-not \$targetPath) { continue }');
@@ -3223,14 +3458,14 @@
                 scriptLines.push('');
             }
 
-            scriptLines.push('\$playlistPath = Join-Path -Path \$PSScriptRoot -ChildPath "playlist.m3u"');
-            scriptLines.push('\$script:playlistContent | Out-File -FilePath \$playlistPath -Encoding utf8');
+            scriptLines.push('\$playlistPath = Join-Path -Path \"$PSScriptRoot\" -ChildPath "playlist.m3u"');
+            scriptLines.push('\$script:playlistContent | Out-File -FilePath \"$playlistPath\" -Encoding utf8');
             scriptLines.push('Write-Host "Playlist created at: \$playlistPath"');
 
             scriptLines.push("\$luaPath = 'C:\\Bridge\\misc\\tools\\mpv-x86_64-v3-20260418-git-4377cce\\portable_config\\scripts\\autorotate.lua'");
             scriptLines.push('\$allRotations = @{}');
-            scriptLines.push('if (Test-Path -LiteralPath \$luaPath) {');
-            scriptLines.push('    \$existingContent = Get-Content -LiteralPath \$luaPath -Raw');
+            scriptLines.push('if (Test-Path -LiteralPath \"$luaPath\") {');
+            scriptLines.push('    \$existingContent = Get-Content -LiteralPath \"$luaPath\" -Raw');
             scriptLines.push('    if (\$existingContent -match \'(?s)local rotations = \\{(.*?)\\}\') {');
             scriptLines.push('        \$inner = \$matches[1]');
             scriptLines.push('        \$entries = \$inner -split \',\'');
@@ -3244,7 +3479,7 @@
             scriptLines.push('foreach (\$file in \$script:rotatedFiles.Keys) { \$allRotations[\$file] = \$script:rotatedFiles[\$file] }');
             scriptLines.push('if (\$allRotations.Count -gt 0) {');
             scriptLines.push('    \$luaDir = Split-Path -Parent \$luaPath');
-            scriptLines.push('    if (-not (Test-Path -Path \$luaDir)) { New-Item -ItemType Directory -Path \$luaDir -Force | Out-Null }');
+            scriptLines.push('    if (-not (Test-Path -Path \"$luaDir\")) { New-Item -ItemType Directory -Path \"$luaDir\" -Force | Out-Null }');
             scriptLines.push('    \$luaContent = @()');
             scriptLines.push("    \$luaContent += 'local rotations = {'");
             scriptLines.push('    foreach (\$file in \$allRotations.Keys) {');
@@ -3266,7 +3501,7 @@
             scriptLines.push("    \$luaContent += '        mp.set_property(\"video-rotate\", rotations[filename])'");
             scriptLines.push("    \$luaContent += '    end'");
             scriptLines.push("    \$luaContent += 'end)'");
-            scriptLines.push('    \$luaContent | Out-File -FilePath \$luaPath -Encoding utf8');
+            scriptLines.push('    \$luaContent | Out-File -FilePath \"$luaPath\" -Encoding utf8');
             scriptLines.push('    Write-Host "Updated MPV autorotate script at: \$luaPath"');
             scriptLines.push('}');
 
